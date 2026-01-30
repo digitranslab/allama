@@ -1,0 +1,41 @@
+title: Adder tree skips
+#    A
+#    /\
+#   B  [C] <- C should not run
+description: Test that the condition returns false and C does not run
+config:
+  scheduler: dynamic
+entrypoint:
+  ref: a
+
+triggers:
+  - type: webhook
+    ref: my_webhook
+    id: wh-XXXXXX
+    entrypoint: a # This can be any
+    args:
+      url: http://api:8000/test/items/1
+      method: GET
+
+actions:
+  - ref: a
+    action: core.transform.reshape
+    args:
+      value: "1"
+
+  - ref: b
+    action: core.transform.reshape
+    args:
+      # Demonstrate casting
+      value: ${{ int(ACTIONS.a.result) + 1 }}
+    depends_on:
+      - a
+
+  - ref: c
+    action: core.transform.reshape
+    args:
+      value: ${{ int(ACTIONS.a.result) + 3 }}
+    depends_on:
+      - a
+    # This task should not run, as a.result is "1"
+    run_if: ${{ FN.is_equal(ACTIONS.a.result, str(2)) }}

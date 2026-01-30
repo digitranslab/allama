@@ -1,0 +1,106 @@
+from enum import IntEnum
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+from allama.authz.enums import OrgRole, WorkspaceRole
+from allama.identifiers import InternalServiceID, OrganizationID, UserID, WorkspaceID
+
+
+class AccessLevel(IntEnum):
+    """Access control levels for roles."""
+
+    BASIC = 0
+    """The access level for workspace members."""
+    ADMIN = 999
+    """The access level for organization admins. Org admins are members of all workspaces."""
+
+
+class Role(BaseModel):
+    """The identity and authorization of a user or service.
+
+    Params
+    ------
+    type : Literal["user", "service"]
+        The type of role.
+    user_id : UUID | None
+        The user's ID, or the service's user_id.
+        This can be None for internal services, or when a user hasn't been set for the role.
+    service_id : str | None = None
+        The service's role name, or None if the role is a user.
+
+
+    User roles
+    ----------
+    - User roles are authenticated via JWT.
+    - The `user_id` is the user's JWT 'sub' claim.
+    - User roles do not have an associated `service_id`, this must be None.
+
+    Service roles
+    -------------
+    - Service roles are authenticated via API key.
+    - Used for internal services to authenticate with the API.
+    - A service's `user_id` is the user it's acting on behalf of. This can be None for internal services.
+    """
+
+    type: Literal["user", "service"] = Field(frozen=True)
+    workspace_id: WorkspaceID | None = Field(default=None, frozen=True)
+    organization_id: OrganizationID | None = Field(default=None, frozen=True)
+    workspace_role: WorkspaceRole | None = Field(default=None, frozen=True)
+    org_role: OrgRole | None = Field(default=None, frozen=True)
+    user_id: UserID | None = Field(default=None, frozen=True)
+    access_level: AccessLevel = Field(default=AccessLevel.BASIC, frozen=True)
+    service_id: InternalServiceID = Field(frozen=True)
+    is_platform_superuser: bool = Field(default=False, frozen=True)
+    """Whether this role belongs to a platform superuser (User.is_superuser=True)."""
+
+    @property
+    def is_superuser(self) -> bool:
+        """Check if this role has superuser (platform admin) privileges."""
+        return self.is_platform_superuser
+
+    def to_headers(self) -> dict[str, str]:
+        headers = {
+            "x-allama-role-type": self.type,
+            "x-allama-role-service-id": self.service_id,
+            "x-allama-role-access-level": self.access_level.name,
+        }
+        if self.user_id is not None:
+            headers["x-allama-role-user-id"] = str(self.user_id)
+        if self.workspace_id is not None:
+            headers["x-allama-role-workspace-id"] = str(self.workspace_id)
+        if self.workspace_role is not None:
+            headers["x-allama-role-workspace-role"] = self.workspace_role.value
+        if self.org_role is not None:
+            headers["x-allama-role-org-role"] = self.org_role.value
+        return headers
+
+
+class PlatformRole(BaseModel):
+    """Role for platform admin (superuser) operations.
+
+    Used for admin endpoints that operate at the platform level,
+    not scoped to any organization or workspace.
+
+    The user_id is preserved for audit logging purposes.
+    """
+
+    type: Literal["user", "service"] = Field(frozen=True)
+    user_id: UserID = Field(frozen=True)
+    """The superuser's ID - required for audit logging."""
+    access_level: AccessLevel = Field(default=AccessLevel.ADMIN, frozen=True)
+    service_id: InternalServiceID = Field(frozen=True)
+
+    @property
+    def is_platform_superuser(self) -> bool:
+        """Platform roles always have superuser privileges."""
+        return True
+
+
+def system_role() -> Role:
+    """Role for system actions."""
+    return Role(
+        type="service",
+        service_id="allama-api",
+        access_level=AccessLevel.ADMIN,
+    )

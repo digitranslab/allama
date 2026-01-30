@@ -1,0 +1,87 @@
+"""Platform-level registry sync endpoints."""
+
+from __future__ import annotations
+
+import uuid
+
+from fastapi import APIRouter, HTTPException, Query, status
+
+from allama.auth.credentials import SuperuserRole
+from allama.db.dependencies import AsyncDBSession
+from allama_ee.admin.registry.schemas import (
+    RegistryStatusResponse,
+    RegistrySyncResponse,
+    RegistryVersionPromoteResponse,
+    RegistryVersionRead,
+)
+from allama_ee.admin.registry.service import AdminRegistryService
+
+router = APIRouter(prefix="/registry", tags=["admin:registry"])
+
+
+@router.post("/sync", response_model=RegistrySyncResponse)
+async def sync_all_repositories(
+    role: SuperuserRole,
+    session: AsyncDBSession,
+    force: bool = Query(False, description="Force sync by deleting existing version"),
+) -> RegistrySyncResponse:
+    """Trigger sync for all platform registry repositories."""
+    service = AdminRegistryService(session, role)
+    return await service.sync_all_repositories(force=force)
+
+
+@router.post("/sync/{repository_id}", response_model=RegistrySyncResponse)
+async def sync_repository(
+    role: SuperuserRole,
+    session: AsyncDBSession,
+    repository_id: uuid.UUID,
+    force: bool = Query(False, description="Force sync by deleting existing version"),
+) -> RegistrySyncResponse:
+    """Trigger sync for a specific platform registry repository."""
+    service = AdminRegistryService(session, role)
+    try:
+        return await service.sync_repository(repository_id, force=force)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+
+
+@router.get("/status", response_model=RegistryStatusResponse)
+async def get_registry_status(
+    role: SuperuserRole,
+    session: AsyncDBSession,
+) -> RegistryStatusResponse:
+    """Get registry sync status and health."""
+    service = AdminRegistryService(session, role)
+    return await service.get_status()
+
+
+@router.get("/versions", response_model=list[RegistryVersionRead])
+async def list_registry_versions(
+    role: SuperuserRole,
+    session: AsyncDBSession,
+    repository_id: uuid.UUID | None = Query(None),
+    limit: int = Query(50, ge=1, le=100),
+) -> list[RegistryVersionRead]:
+    """List registry versions with optional filtering."""
+    service = AdminRegistryService(session, role)
+    return list(await service.list_versions(repository_id=repository_id, limit=limit))
+
+
+@router.post(
+    "/{repository_id}/versions/{version_id}/promote",
+    response_model=RegistryVersionPromoteResponse,
+)
+async def promote_registry_version(
+    role: SuperuserRole,
+    session: AsyncDBSession,
+    repository_id: uuid.UUID,
+    version_id: uuid.UUID,
+) -> RegistryVersionPromoteResponse:
+    """Promote a registry version to be the current version for a repository."""
+    service = AdminRegistryService(session, role)
+    try:
+        return await service.promote_version(
+            repository_id=repository_id, version_id=version_id
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e

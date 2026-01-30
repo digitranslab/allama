@@ -1,0 +1,13 @@
+title: Reshape loop with a list of iterables (zip)
+description: Test that we can loop
+entrypoint:
+  ref: a
+
+actions:
+  - ref: a
+    action: core.transform.reshape
+    for_each:
+      - ${{ for var.x in [1, 2, 3] }}
+      - ${{ for var.y in ["one", "two", "three"] }}
+    args:
+      value: I received ${{ FN.concat(str(var.x),  var.y) }} from you

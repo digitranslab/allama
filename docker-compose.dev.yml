@@ -1,0 +1,428 @@
+services:
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    ports:
+      - ${PUBLIC_APP_PORT}:${PUBLIC_APP_PORT}
+    environment:
+      - BASE_DOMAIN=${BASE_DOMAIN}
+      - ADDRESS=${ADDRESS}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    restart: unless-stopped
+    ports:
+      - ${API_PORT:-8000}:8000
+    environment:
+      # App
+      LOG_LEVEL: ${LOG_LEVEL}
+      ALLAMA__ALLOW_ORIGINS: ${ALLAMA__ALLOW_ORIGINS}
+      ALLAMA__API_ROOT_PATH: ${ALLAMA__API_ROOT_PATH}
+      ALLAMA__API_URL: ${ALLAMA__API_URL}
+      ALLAMA__APP_ENV: ${ALLAMA__APP_ENV}
+      ALLAMA__AUTH_ALLOWED_DOMAINS: ${ALLAMA__AUTH_ALLOWED_DOMAINS}
+      ALLAMA__AUTH_MIN_PASSWORD_LENGTH: ${ALLAMA__AUTH_MIN_PASSWORD_LENGTH}
+      ALLAMA__AUTH_TYPES: ${ALLAMA__AUTH_TYPES}
+      ALLAMA__AUTH_SUPERADMIN_EMAIL: ${ALLAMA__AUTH_SUPERADMIN_EMAIL}
+      ALLAMA__DEV_COOKIE_NAME: ${ALLAMA__DEV_COOKIE_NAME:-}
+      ALLAMA__DB_ENCRYPTION_KEY: ${ALLAMA__DB_ENCRYPTION_KEY} # Sensitive
+      ALLAMA__DB_SSLMODE: ${ALLAMA__DB_SSLMODE}
+      ALLAMA__DB_URI: ${ALLAMA__DB_URI} # Sensitive
+      ALLAMA__PUBLIC_API_URL: ${ALLAMA__PUBLIC_API_URL}
+      ALLAMA__PUBLIC_APP_URL: ${ALLAMA__PUBLIC_APP_URL}
+      ALLAMA__SERVICE_KEY: ${ALLAMA__SERVICE_KEY} # Sensitive
+      ALLAMA__SIGNING_SECRET: ${ALLAMA__SIGNING_SECRET} # Sensitive
+      OAUTH_CLIENT_ID: ${OAUTH_CLIENT_ID}
+      OAUTH_CLIENT_SECRET: ${OAUTH_CLIENT_SECRET}
+      USER_AUTH_SECRET: ${USER_AUTH_SECRET}
+      ALLAMA__FEATURE_FLAGS: ${ALLAMA__FEATURE_FLAGS}
+      ALLAMA__CONTEXT_COMPRESSION_ENABLED: ${ALLAMA__CONTEXT_COMPRESSION_ENABLED:-false}
+      ALLAMA__CONTEXT_COMPRESSION_THRESHOLD_KB: ${ALLAMA__CONTEXT_COMPRESSION_THRESHOLD_KB:-16}
+      # SAML SSO
+      SAML_IDP_METADATA_URL: ${SAML_IDP_METADATA_URL}
+      # Temporal
+      TEMPORAL__CLUSTER_URL: ${TEMPORAL__CLUSTER_URL}
+      TEMPORAL__CLUSTER_QUEUE: ${TEMPORAL__CLUSTER_QUEUE}
+      TEMPORAL__CLUSTER_NAMESPACE: ${TEMPORAL__CLUSTER_NAMESPACE}
+      TEMPORAL__API_KEY: ${TEMPORAL__API_KEY}
+      # Blob Storage
+      ALLAMA__BLOB_STORAGE_ENDPOINT: http://minio:9000
+      ALLAMA__BLOB_STORAGE_PRESIGNED_URL_ENDPOINT: ${PUBLIC_APP_URL}/s3
+      ALLAMA__WORKFLOW_ARTIFACT_RETENTION_DAYS: ${ALLAMA__WORKFLOW_ARTIFACT_RETENTION_DAYS:-30}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      # Local registry
+      ALLAMA__LOCAL_REPOSITORY_PATH: ${ALLAMA__LOCAL_REPOSITORY_PATH}
+      ALLAMA__LOCAL_REPOSITORY_ENABLED: ${ALLAMA__LOCAL_REPOSITORY_ENABLED}
+      # Redis
+      REDIS_URL: ${REDIS_URL}
+      # Agent
+      ALLAMA__UNIFIED_AGENT_STREAMING_ENABLED: ${ALLAMA__UNIFIED_AGENT_STREAMING_ENABLED}
+
+    volumes:
+      - ./allama:/app/allama
+      - ./packages:/app/packages
+      - ./alembic:/app/alembic
+      - ${ALLAMA__LOCAL_REPOSITORY_PATH}:/app/local_registry
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      temporal:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    restart: unless-stopped
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL}
+      ALLAMA__API_ROOT_PATH: ${ALLAMA__API_ROOT_PATH}
+      ALLAMA__API_URL: ${ALLAMA__API_URL}
+      ALLAMA__APP_ENV: ${ALLAMA__APP_ENV}
+      ALLAMA__DB_ENCRYPTION_KEY: ${ALLAMA__DB_ENCRYPTION_KEY} # Sensitive
+      ALLAMA__DB_SSLMODE: ${ALLAMA__DB_SSLMODE}
+      ALLAMA__DB_URI: ${ALLAMA__DB_URI} # Sensitive
+      ALLAMA__PUBLIC_API_URL: ${ALLAMA__PUBLIC_API_URL}
+      ALLAMA__SERVICE_KEY: ${ALLAMA__SERVICE_KEY} # Sensitive
+      ALLAMA__SIGNING_SECRET: ${ALLAMA__SIGNING_SECRET} # Sensitive
+      ALLAMA__FEATURE_FLAGS: ${ALLAMA__FEATURE_FLAGS}
+      ALLAMA__CONTEXT_COMPRESSION_ENABLED: ${ALLAMA__CONTEXT_COMPRESSION_ENABLED:-false}
+      ALLAMA__CONTEXT_COMPRESSION_THRESHOLD_KB: ${ALLAMA__CONTEXT_COMPRESSION_THRESHOLD_KB:-16}
+      # Temporal
+      TEMPORAL__CLUSTER_URL: ${TEMPORAL__CLUSTER_URL}
+      TEMPORAL__CLUSTER_QUEUE: ${TEMPORAL__CLUSTER_QUEUE}
+      TEMPORAL__CLUSTER_NAMESPACE: ${TEMPORAL__CLUSTER_NAMESPACE}
+      TEMPORAL__API_KEY: ${TEMPORAL__API_KEY}
+      # Local registry
+      ALLAMA__LOCAL_REPOSITORY_PATH: ${ALLAMA__LOCAL_REPOSITORY_PATH}
+      ALLAMA__LOCAL_REPOSITORY_ENABLED: ${ALLAMA__LOCAL_REPOSITORY_ENABLED}
+      ALLAMA__EXECUTOR_CLIENT_TIMEOUT: ${ALLAMA__EXECUTOR_CLIENT_TIMEOUT:-300}
+      # Sentry
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      # Redis
+      REDIS_URL: ${REDIS_URL}
+      # Blob storage (for S3)
+      ALLAMA__BLOB_STORAGE_ENDPOINT: ${ALLAMA__BLOB_STORAGE_ENDPOINT:-http://minio:9000}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - ./allama:/app/allama
+      - ./packages:/app/packages
+      - ${ALLAMA__LOCAL_REPOSITORY_PATH}:/app/local_registry
+    command: ["python", "-m", "allama.dsl.worker"]
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      api:
+        condition: service_started
+      temporal:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  executor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    restart: unless-stopped
+    # Required for nsjail sandbox (when enabled)
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      # Common
+      LOG_LEVEL: ${LOG_LEVEL}
+      ALLAMA__APP_ENV: ${ALLAMA__APP_ENV}
+      ALLAMA__DB_ENCRYPTION_KEY: ${ALLAMA__DB_ENCRYPTION_KEY} # Sensitive
+      ALLAMA__DB_SSLMODE: ${ALLAMA__DB_SSLMODE}
+      ALLAMA__DB_URI: ${ALLAMA__DB_URI} # Sensitive
+      ALLAMA__SERVICE_KEY: ${ALLAMA__SERVICE_KEY} # Sensitive
+      ALLAMA__SIGNING_SECRET: ${ALLAMA__SIGNING_SECRET} # Sensitive
+      ALLAMA__FEATURE_FLAGS: ${ALLAMA__FEATURE_FLAGS}
+      ALLAMA__API_URL: ${ALLAMA__API_URL:-http://api:8000}
+      # Compression (must match worker for codec compatibility)
+      ALLAMA__CONTEXT_COMPRESSION_ENABLED: ${ALLAMA__CONTEXT_COMPRESSION_ENABLED:-false}
+      ALLAMA__CONTEXT_COMPRESSION_THRESHOLD_KB: ${ALLAMA__CONTEXT_COMPRESSION_THRESHOLD_KB:-16}
+      # Registry
+      ALLAMA__UNSAFE_DISABLE_SM_MASKING: ${ALLAMA__UNSAFE_DISABLE_SM_MASKING:-false}
+      # Local registry
+      ALLAMA__LOCAL_REPOSITORY_PATH: ${ALLAMA__LOCAL_REPOSITORY_PATH}
+      ALLAMA__LOCAL_REPOSITORY_ENABLED: ${ALLAMA__LOCAL_REPOSITORY_ENABLED}
+      # Sandbox
+      ALLAMA__DISABLE_NSJAIL: ${ALLAMA__DISABLE_NSJAIL:-false}
+      ALLAMA__SANDBOX_NSJAIL_PATH: /usr/local/bin/nsjail
+      ALLAMA__SANDBOX_ROOTFS_PATH: /var/lib/allama/sandbox-rootfs
+      ALLAMA__SANDBOX_CACHE_DIR: /var/lib/allama/sandbox-cache
+      # Temporal
+      TEMPORAL__CLUSTER_URL: ${TEMPORAL__CLUSTER_URL}
+      TEMPORAL__CLUSTER_NAMESPACE: ${TEMPORAL__CLUSTER_NAMESPACE}
+      TEMPORAL__API_KEY: ${TEMPORAL__API_KEY}
+      # Executor worker configuration
+      ALLAMA__EXECUTOR_QUEUE: ${ALLAMA__EXECUTOR_QUEUE:-shared-action-queue}
+      # Pool size auto-scales based on available CPUs if not set
+      ALLAMA__EXECUTOR_WORKER_POOL_SIZE: ${ALLAMA__EXECUTOR_WORKER_POOL_SIZE:-}
+      ALLAMA__EXECUTOR_BACKEND: ${ALLAMA__EXECUTOR_BACKEND:-auto}
+      # Redis
+      REDIS_URL: ${REDIS_URL}
+      # Blob storage (for S3/MinIO wheel access)
+      ALLAMA__BLOB_STORAGE_ENDPOINT: ${ALLAMA__BLOB_STORAGE_ENDPOINT:-http://minio:9000}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - ./allama:/app/allama
+      - ./packages:/app/packages
+      - ${ALLAMA__LOCAL_REPOSITORY_PATH}:/app/local_registry
+      - sandbox-cache:/var/lib/allama/sandbox-cache
+    command: ["python", "-m", "allama.executor.worker"]
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      temporal:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  agent-executor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    restart: unless-stopped
+    # Required for nsjail sandbox (agent runtime isolation)
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
+    # Required for pasta userspace networking (creates TAP device in sandbox netns)
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      # Common
+      LOG_LEVEL: ${LOG_LEVEL}
+      ALLAMA__APP_ENV: ${ALLAMA__APP_ENV}
+      ALLAMA__DB_ENCRYPTION_KEY: ${ALLAMA__DB_ENCRYPTION_KEY} # Sensitive
+      ALLAMA__DB_SSLMODE: ${ALLAMA__DB_SSLMODE}
+      ALLAMA__DB_URI: ${ALLAMA__DB_URI} # Sensitive
+      ALLAMA__SERVICE_KEY: ${ALLAMA__SERVICE_KEY} # Sensitive
+      ALLAMA__SIGNING_SECRET: ${ALLAMA__SIGNING_SECRET} # Sensitive
+      ALLAMA__FEATURE_FLAGS: ${ALLAMA__FEATURE_FLAGS}
+      ALLAMA__API_URL: ${ALLAMA__API_URL:-http://api:8000}
+      # Compression (must match worker for codec compatibility)
+      ALLAMA__CONTEXT_COMPRESSION_ENABLED: ${ALLAMA__CONTEXT_COMPRESSION_ENABLED:-false}
+      ALLAMA__CONTEXT_COMPRESSION_THRESHOLD_KB: ${ALLAMA__CONTEXT_COMPRESSION_THRESHOLD_KB:-16}
+      # Registry
+      ALLAMA__UNSAFE_DISABLE_SM_MASKING: ${ALLAMA__UNSAFE_DISABLE_SM_MASKING:-false}
+      # Local registry
+      ALLAMA__LOCAL_REPOSITORY_PATH: ${ALLAMA__LOCAL_REPOSITORY_PATH}
+      ALLAMA__LOCAL_REPOSITORY_ENABLED: ${ALLAMA__LOCAL_REPOSITORY_ENABLED}
+      # Sandbox
+      ALLAMA__EXECUTOR_BACKEND: ${ALLAMA__EXECUTOR_BACKEND:-auto}
+      ALLAMA__DISABLE_NSJAIL: ${ALLAMA__DISABLE_NSJAIL:-false}
+      ALLAMA__SANDBOX_NSJAIL_PATH: /usr/local/bin/nsjail
+      ALLAMA__SANDBOX_ROOTFS_PATH: /var/lib/allama/sandbox-rootfs
+      ALLAMA__SANDBOX_CACHE_DIR: /var/lib/allama/sandbox-cache
+      # Temporal
+      TEMPORAL__CLUSTER_URL: ${TEMPORAL__CLUSTER_URL}
+      TEMPORAL__CLUSTER_NAMESPACE: ${TEMPORAL__CLUSTER_NAMESPACE}
+      TEMPORAL__API_KEY: ${TEMPORAL__API_KEY}
+      # Agent Worker configuration
+      ALLAMA__AGENT_QUEUE: ${ALLAMA__AGENT_QUEUE:-shared-agent-queue}
+      # Pool size auto-scales based on available CPUs if not set
+      ALLAMA__EXECUTOR_WORKER_POOL_SIZE: ${ALLAMA__EXECUTOR_WORKER_POOL_SIZE:-}
+      # Redis
+      REDIS_URL: ${REDIS_URL}
+      # Blob storage (for S3/MinIO tarball access)
+      ALLAMA__BLOB_STORAGE_ENDPOINT: ${ALLAMA__BLOB_STORAGE_ENDPOINT:-http://minio:9000}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - ./allama:/app/allama
+      - ./packages:/app/packages
+      - ${ALLAMA__LOCAL_REPOSITORY_PATH}:/app/local_registry
+      - sandbox-cache:/var/lib/allama/sandbox-cache
+    command: ["python", "-m", "allama.agent.worker"]
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      api:
+        condition: service_started
+      temporal:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  ui:
+    # image: ghcr.io/digitranslab/allama-ui:${ALLAMA__IMAGE_TAG:-0.36.6}
+    # container_name: ui
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_SERVER_API_URL: ${NEXT_SERVER_API_URL}
+        NODE_ENV: ${NODE_ENV}
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/.next:/app/.next
+      - ./frontend/node_modules:/app/node_modules
+    restart: unless-stopped
+    ports:
+      - ${UI_PORT:-3000}:3000
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_APP_ENV: ${NEXT_PUBLIC_APP_ENV}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+      NEXT_PUBLIC_AUTH_TYPES: ${ALLAMA__AUTH_TYPES}
+      NEXT_SERVER_API_URL: ${NEXT_SERVER_API_URL}
+      NODE_ENV: ${NODE_ENV}
+      ALLAMA__SERVICE_KEY: ${ALLAMA__SERVICE_KEY}
+    attach: false
+    depends_on:
+      - api
+
+  postgres_db:
+    image: postgres:16
+    restart: unless-stopped
+    ports:
+      - ${PG_PORT:-5432}:5432
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: ${ALLAMA__POSTGRES_USER}
+      POSTGRES_PASSWORD: ${ALLAMA__POSTGRES_PASSWORD}
+    volumes:
+      - core-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+  migrations:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    restart: "no"
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL}
+      ALLAMA__DB_URI: ${ALLAMA__DB_URI}
+      ALLAMA__DB_SSLMODE: ${ALLAMA__DB_SSLMODE}
+    volumes:
+      - ./allama:/app/allama
+      - ./packages:/app/packages
+      - ./alembic:/app/alembic
+    command: ["python3", "-m", "alembic", "upgrade", "head"]
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+
+  temporal_postgres_db:
+    image: postgres:13
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${TEMPORAL__POSTGRES_USER}
+      POSTGRES_PASSWORD: ${TEMPORAL__POSTGRES_PASSWORD}
+    volumes:
+      - temporal-db:/var/lib/postgresql/data
+
+  temporal:
+    image: temporalio/auto-setup:${TEMPORAL__VERSION:-1.27.1}
+    restart: unless-stopped
+    ports:
+      - ${TEMPORAL_PORT:-7233}:7233
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=${TEMPORAL__POSTGRES_USER}
+      - POSTGRES_PWD=${TEMPORAL__POSTGRES_PASSWORD}
+      - POSTGRES_SEEDS=temporal_postgres_db
+      - LOG_LEVEL=warn
+    healthcheck:
+      test: ["CMD", "tctl", "--address", "temporal:7233", "cluster", "health"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+    depends_on:
+      - temporal_postgres_db
+
+    attach: false
+
+  temporal_ui:
+    image: temporalio/ui:${TEMPORAL__UI_VERSION:-latest}
+    ports:
+      - ${TEMPORAL_UI_PORT:-8081}:8080
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:8080
+    depends_on:
+      - temporal
+    attach: false
+
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    restart: unless-stopped
+    ports:
+      - ${MINIO_PORT:-9000}:9000
+      - ${MINIO_CONSOLE_PORT:-9001}:9001
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    attach: false
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - ${REDIS_PORT_HOST:-6379}:6379
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    attach: false
+
+volumes:
+  core-db:
+  temporal-db:
+  containers:
+  minio-data:
+  redis-data:
+  sandbox-cache:

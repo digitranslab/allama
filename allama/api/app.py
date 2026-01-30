@@ -1,0 +1,580 @@
+import asyncio
+from collections.abc import Callable
+from contextlib import asynccontextmanager
+
+import allama_registry
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import ORJSONResponse
+from httpx_oauth.clients.google import GoogleOAuth2
+from pydantic import BaseModel
+from pydantic_core import to_jsonable_python
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+from allama_ee.admin.router import router as admin_router
+from allama_ee.agent.approvals.router import router as approvals_router
+
+from allama import __version__ as APP_VERSION
+from allama import config
+from allama.agent.internal_router import router as internal_agent_router
+from allama.agent.preset.internal_router import (
+    router as internal_agent_preset_router,
+)
+from allama.agent.preset.router import router as agent_preset_router
+from allama.agent.router import router as agent_router
+from allama.agent.session.router import router as agent_session_router
+from allama.api.common import (
+    add_temporal_search_attributes,
+    bootstrap_role,
+    custom_generate_unique_id,
+    generic_exception_handler,
+    allama_exception_handler,
+)
+from allama.auth.dependencies import require_auth_type_enabled
+from allama.auth.enums import AuthType
+from allama.auth.router import router as users_router
+from allama.auth.saml import router as saml_router
+from allama.auth.schemas import UserCreate, UserRead, UserUpdate
+from allama.auth.types import Role
+from allama.auth.users import (
+    FastAPIUsersException,
+    InvalidEmailException,
+    auth_backend,
+    fastapi_users,
+)
+from allama.cases.attachments.internal_router import (
+    router as internal_case_attachments_router,
+)
+from allama.cases.attachments.router import router as case_attachments_router
+from allama.cases.durations.router import router as case_durations_router
+from allama.cases.internal_router import (
+    comments_router as internal_comments_router,
+)
+from allama.cases.internal_router import (
+    router as internal_cases_router,
+)
+from allama.cases.router import case_fields_router as case_fields_router
+from allama.cases.router import cases_router as cases_router
+from allama.cases.tag_definitions.internal_router import (
+    router as internal_case_tag_definitions_router,
+)
+from allama.cases.tag_definitions.router import (
+    router as case_tag_definitions_router,
+)
+from allama.cases.tags.internal_router import router as internal_case_tags_router
+from allama.cases.tags.router import router as case_tags_router
+from allama.contexts import ctx_role
+from allama.db.dependencies import AsyncDBSession
+from allama.editor.router import router as editor_router
+from allama.exceptions import EntitlementRequired, AllamaException
+from allama.feature_flags import (
+    FeatureFlag,
+    FlagLike,
+    is_feature_enabled,
+)
+from allama.feature_flags.router import router as feature_flags_router
+from allama.inbox.router import router as inbox_router
+from allama.integrations.router import (
+    integrations_router,
+    mcp_router,
+    providers_router,
+)
+from allama.logger import logger
+from allama.middleware import (
+    AuthorizationCacheMiddleware,
+    RequestLoggingMiddleware,
+)
+from allama.middleware.security import SecurityHeadersMiddleware
+from allama.organization.management import (
+    ensure_default_organization,
+    get_default_organization_id,
+)
+from allama.organization.router import router as org_router
+from allama.registry.actions.router import router as registry_actions_router
+from allama.registry.constants import DEFAULT_REGISTRY_ORIGIN
+from allama.registry.repositories.platform_service import PlatformRegistryReposService
+from allama.registry.repositories.router import router as registry_repos_router
+from allama.registry.sync.jobs import sync_platform_registry_on_startup
+from allama.secrets.router import org_router as org_secrets_router
+from allama.secrets.router import router as secrets_router
+from allama.settings.router import router as org_settings_router
+from allama.settings.service import SettingsService, get_setting_override
+from allama.storage.blob import configure_bucket_lifecycle, ensure_bucket_exists
+from allama.tables.internal_router import router as internal_tables_router
+from allama.tables.router import router as tables_router
+from allama.tags.router import router as tags_router
+from allama.variables.internal_router import router as internal_variables_router
+from allama.variables.router import router as variables_router
+from allama.vcs.router import org_router as vcs_router
+from allama.webhooks.router import router as webhook_router
+from allama.workflow.actions.router import router as workflow_actions_router
+from allama.workflow.executions.internal_router import (
+    router as internal_workflows_router,
+)
+from allama.workflow.executions.router import router as workflow_executions_router
+from allama.workflow.graph.router import router as workflow_graph_router
+from allama.workflow.management.folders.router import (
+    router as workflow_folders_router,
+)
+from allama.workflow.management.router import router as workflow_management_router
+from allama.workflow.schedules.router import router as schedules_router
+from allama.workflow.store.router import router as workflow_store_router
+from allama.workflow.tags.router import router as workflow_tags_router
+from allama.workspaces.router import router as workspaces_router
+from allama.workspaces.service import WorkspaceService
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Temporal
+    # Run in background to avoid blocking startup
+    asyncio.create_task(add_temporal_search_attributes())
+    logger.debug("Spawned lifespan task to add temporal search attributes")
+
+    # Storage
+    await ensure_bucket_exists(config.ALLAMA__BLOB_STORAGE_BUCKET_ATTACHMENTS)
+    await ensure_bucket_exists(config.ALLAMA__BLOB_STORAGE_BUCKET_REGISTRY)
+
+    # Workflow bucket with lifecycle expiration
+    await ensure_bucket_exists(config.ALLAMA__BLOB_STORAGE_BUCKET_WORKFLOW)
+    if config.ALLAMA__WORKFLOW_ARTIFACT_RETENTION_DAYS > 0:
+        await configure_bucket_lifecycle(
+            bucket=config.ALLAMA__BLOB_STORAGE_BUCKET_WORKFLOW,
+            expiration_days=config.ALLAMA__WORKFLOW_ARTIFACT_RETENTION_DAYS,
+        )
+
+    await ensure_default_organization()
+
+    # Spawn platform registry sync as background task (non-blocking)
+    # Uses leader election to prevent race conditions across multiple API processes
+    registry_sync_task = asyncio.create_task(
+        sync_platform_registry_on_startup(),
+        name="platform_registry_sync",
+    )
+    logger.debug("Spawned background task for platform registry sync")
+
+    logger.info(
+        "Feature flags", feature_flags=[f.value for f in config.ALLAMA__FEATURE_FLAGS]
+    )
+    logger.info("API startup complete")
+
+    yield
+
+    # Gracefully handle the registry sync task during shutdown
+    if not registry_sync_task.done():
+        logger.info("Waiting for platform registry sync task to complete...")
+        try:
+            # Give the task a reasonable time to complete
+            await asyncio.wait_for(registry_sync_task, timeout=10.0)
+            logger.info("Platform registry sync task completed")
+        except TimeoutError:
+            logger.warning(
+                "Platform registry sync task did not complete in time, cancelling"
+            )
+            registry_sync_task.cancel()
+            try:
+                await registry_sync_task
+            except asyncio.CancelledError:
+                logger.debug("Platform registry sync task cancelled")
+        except Exception as e:
+            logger.warning(
+                "Platform registry sync task failed during shutdown", error=e
+            )
+    else:
+        # Task already completed - retrieve result to surface any exceptions
+        try:
+            registry_sync_task.result()
+            logger.debug("Platform registry sync task had already completed")
+        except Exception as e:
+            logger.warning(
+                "Platform registry sync task failed before shutdown", error=e
+            )
+
+
+async def setup_org_settings(session: AsyncSession, admin_role: Role):
+    settings_service = SettingsService(session, role=admin_role)
+    await settings_service.init_default_settings()
+
+
+async def setup_workspace_defaults(session: AsyncSession, admin_role: Role):
+    ws_service = WorkspaceService(session, role=admin_role)
+    workspaces = await ws_service.admin_list_workspaces()
+    n_workspaces = len(workspaces)
+    logger.info(f"{n_workspaces} workspaces found")
+    if n_workspaces == 0:
+        # Create default workspace if there are no workspaces
+        try:
+            default_workspace = await ws_service.create_workspace("Default Workspace")
+            logger.info("Default workspace created", workspace=default_workspace)
+        except IntegrityError:
+            logger.info("Default workspace already exists, skipping")
+
+
+# Catch-all exception handler to prevent stack traces from leaking
+def validation_exception_handler(request: Request, exc: Exception) -> Response:
+    """Improves visiblity of 422 errors."""
+    if not isinstance(exc, RequestValidationError):
+        return ORJSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={"detail": str(exc)},
+        )
+    errors = exc.errors()
+    ser_errors = to_jsonable_python(errors, fallback=str)
+    logger.error(
+        "API Model Validation error",
+        method=request.method,
+        path=request.url.path,
+        errors=ser_errors,
+    )
+    return ORJSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": ser_errors},
+    )
+
+
+def fastapi_users_auth_exception_handler(request: Request, exc: Exception) -> Response:
+    msg = str(exc)
+    logger.warning(
+        "Handling FastAPI Users exception",
+        msg=msg,
+        role=ctx_role.get(),
+        params=request.query_params,
+        path=request.url.path,
+    )
+    match exc:
+        case InvalidEmailException():
+            status_code = status.HTTP_400_BAD_REQUEST
+        case _:
+            status_code = status.HTTP_401_UNAUTHORIZED
+    return ORJSONResponse(status_code=status_code, content={"detail": msg})
+
+
+def entitlement_exception_handler(request: Request, exc: Exception) -> Response:
+    """Handle EntitlementRequired exceptions with a 403 Forbidden response."""
+    if not isinstance(exc, EntitlementRequired):
+        return ORJSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"detail": str(exc)},
+        )
+    logger.warning(
+        "Entitlement required",
+        entitlement=exc.entitlement,
+        path=request.url.path,
+    )
+    return ORJSONResponse(
+        status_code=status.HTTP_403_FORBIDDEN,
+        content={
+            "type": "EntitlementRequired",
+            "message": str(exc),
+            "detail": exc.detail,
+        },
+    )
+
+
+def feature_flag_dep(flag: FlagLike) -> Callable[..., None]:
+    """Check if a feature flag is enabled."""
+
+    def _is_feature_enabled() -> None:
+        if not is_feature_enabled(flag):
+            logger.debug("Feature flag is not enabled", flag=flag)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Feature not enabled"
+            )
+        logger.debug("Feature flag is enabled", flag=flag)
+
+    return _is_feature_enabled
+
+
+def create_app(**kwargs) -> FastAPI:
+    if config.ALLAMA__ALLOW_ORIGINS is not None:
+        allow_origins = config.ALLAMA__ALLOW_ORIGINS.split(",")
+    else:
+        allow_origins = ["*"]
+    app = FastAPI(
+        title="Allama API",
+        description=("Allama is the open source automation platform for enterprise."),
+        summary="Allama API",
+        version="1",
+        terms_of_service="https://docs.google.com/document/d/e/2PACX-1vQvDe3SoVAPoQc51MgfGCP71IqFYX_rMVEde8zC4qmBCec5f8PLKQRdxa6tsUABT8gWAR9J-EVs2CrQ/pub",
+        contact={"name": "Allama Founders", "email": "founders@allama.com"},
+        license_info={
+            "name": "AGPL-3.0",
+            "url": "https://www.gnu.org/licenses/agpl-3.0.html",
+        },
+        openapi_tags=[
+            {"name": "public", "description": "Public facing endpoints"},
+            {"name": "workflows", "description": "Workflow management"},
+            {"name": "actions", "description": "Action management"},
+            {"name": "triggers", "description": "Workflow triggers"},
+            {"name": "secrets", "description": "Secret management"},
+            {
+                "name": "variables",
+                "description": "Workspace variable management",
+            },
+        ],
+        servers=[{"url": config.ALLAMA__API_ROOT_PATH}],
+        generate_unique_id_function=custom_generate_unique_id,
+        lifespan=lifespan,
+        default_response_class=ORJSONResponse,
+        root_path=config.ALLAMA__API_ROOT_PATH,
+        **kwargs,
+    )
+    app.state.logger = logger
+
+    # Routers
+    app.include_router(webhook_router)
+    app.include_router(workspaces_router)
+    app.include_router(workflow_management_router)
+    app.include_router(workflow_graph_router)
+    app.include_router(workflow_executions_router)
+    app.include_router(workflow_actions_router)
+    app.include_router(workflow_tags_router)
+    app.include_router(workflow_store_router)
+    app.include_router(secrets_router)
+    app.include_router(variables_router)
+    app.include_router(schedules_router)
+    app.include_router(tags_router)
+    app.include_router(users_router)
+    app.include_router(org_router)
+    app.include_router(agent_router)
+    app.include_router(
+        agent_preset_router,
+        dependencies=[Depends(feature_flag_dep(FeatureFlag.AGENT_PRESETS))],
+    )
+    app.include_router(agent_session_router)
+    app.include_router(approvals_router)
+    app.include_router(admin_router)
+    app.include_router(inbox_router)
+    app.include_router(editor_router)
+    app.include_router(registry_repos_router)
+    app.include_router(registry_actions_router)
+    app.include_router(org_settings_router)
+    app.include_router(org_secrets_router)
+    app.include_router(tables_router)
+    app.include_router(cases_router)
+    app.include_router(case_fields_router)
+    app.include_router(case_tags_router)
+    app.include_router(case_tag_definitions_router)
+    app.include_router(case_attachments_router)
+    app.include_router(
+        case_durations_router,
+        dependencies=[Depends(feature_flag_dep(FeatureFlag.CASE_DURATIONS))],
+    )
+    app.include_router(workflow_folders_router)
+    app.include_router(integrations_router)
+    app.include_router(providers_router)
+    app.include_router(mcp_router)
+    app.include_router(feature_flags_router)
+    app.include_router(
+        vcs_router,
+        dependencies=[Depends(feature_flag_dep(FeatureFlag.GIT_SYNC))],
+    )
+    app.include_router(
+        fastapi_users.get_users_router(UserRead, UserUpdate),
+        prefix="/users",
+        tags=["users"],
+    )
+    # Internal routers
+    app.include_router(internal_agent_router)
+    app.include_router(internal_agent_preset_router)
+    app.include_router(internal_case_attachments_router)
+    app.include_router(internal_cases_router)
+    app.include_router(internal_comments_router)
+    app.include_router(internal_case_tags_router)
+    app.include_router(internal_case_tag_definitions_router)
+    app.include_router(internal_tables_router)
+    app.include_router(internal_variables_router)
+    app.include_router(internal_workflows_router)
+
+    if AuthType.BASIC in config.ALLAMA__AUTH_TYPES:
+        app.include_router(
+            fastapi_users.get_auth_router(auth_backend),
+            prefix="/auth",
+            tags=["auth"],
+        )
+        app.include_router(
+            fastapi_users.get_register_router(UserRead, UserCreate),
+            prefix="/auth",
+            tags=["auth"],
+        )
+        app.include_router(
+            fastapi_users.get_reset_password_router(),
+            prefix="/auth",
+            tags=["auth"],
+        )
+        app.include_router(
+            fastapi_users.get_verify_router(UserRead),
+            prefix="/auth",
+            tags=["auth"],
+        )
+
+    oauth_client = GoogleOAuth2(
+        client_id=config.OAUTH_CLIENT_ID, client_secret=config.OAUTH_CLIENT_SECRET
+    )
+    # This is the frontend URL that the user will be redirected to after authenticating
+    redirect_url = f"{config.ALLAMA__PUBLIC_APP_URL}/auth/oauth/callback"
+    logger.info("OAuth redirect URL", url=redirect_url)
+    app.include_router(
+        fastapi_users.get_oauth_router(
+            oauth_client,
+            auth_backend,
+            config.USER_AUTH_SECRET,
+            # XXX(security): See https://fastapi-users.github.io/fastapi-users/13.0/configuration/oauth/#existing-account-association
+            associate_by_email=True,
+            is_verified_by_default=True,
+            # Points the user back to the login page
+            redirect_url=redirect_url,
+        ),
+        prefix="/auth/oauth",
+        tags=["auth"],
+        dependencies=[require_auth_type_enabled(AuthType.GOOGLE_OAUTH)],
+    )
+    app.include_router(
+        saml_router,
+        dependencies=[require_auth_type_enabled(AuthType.SAML)],
+    )
+
+    if AuthType.BASIC not in config.ALLAMA__AUTH_TYPES:
+        # Need basic auth router for `logout` endpoint
+        app.include_router(
+            fastapi_users.get_logout_router(auth_backend),
+            prefix="/auth",
+            tags=["auth"],
+        )
+
+    # Exception handlers
+    app.add_exception_handler(Exception, generic_exception_handler)
+    app.add_exception_handler(AllamaException, allama_exception_handler)
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(
+        FastAPIUsersException,
+        fastapi_users_auth_exception_handler,
+    )
+    app.add_exception_handler(EntitlementRequired, entitlement_exception_handler)
+
+    # Middleware
+    # Add authorization cache middleware first so it's available for all requests
+    app.add_middleware(AuthorizationCacheMiddleware)
+    app.add_middleware(RequestLoggingMiddleware)
+    if config.ALLAMA__APP_ENV != "development":
+        app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allow_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    logger.info(
+        "App started",
+        env=config.ALLAMA__APP_ENV,
+        origins=allow_origins,
+        auth_types=config.ALLAMA__AUTH_TYPES,
+    )
+    return app
+
+
+app = create_app()
+
+
+class HealthResponse(BaseModel):
+    status: str
+
+
+class RegistryStatus(BaseModel):
+    synced: bool
+    expected_version: str
+    current_version: str | None
+
+
+class ReadinessResponse(BaseModel):
+    status: str
+    registry: RegistryStatus
+
+
+@app.get("/", include_in_schema=False)
+def root() -> HealthResponse:
+    return HealthResponse(status="ok")
+
+
+class AppInfo(BaseModel):
+    version: str
+    public_app_url: str
+    auth_allowed_types: list[AuthType]
+    auth_basic_enabled: bool
+    oauth_google_enabled: bool
+    saml_enabled: bool
+
+
+@app.get("/info", include_in_schema=False)
+async def info(session: AsyncDBSession) -> AppInfo:
+    """Non-sensitive information about the platform, for frontend configuration."""
+
+    keys = {"auth_basic_enabled", "oauth_google_enabled", "saml_enabled"}
+
+    # Get the default organization for platform-level settings
+    org_id = await get_default_organization_id(session)
+    service = SettingsService(session, role=bootstrap_role(org_id))
+    settings = await service.list_org_settings(keys=keys)
+    keyvalues = {s.key: service.get_value(s) for s in settings}
+    for key in keys:
+        keyvalues[key] = get_setting_override(key) or keyvalues[key]
+    return AppInfo(
+        version=APP_VERSION,
+        public_app_url=config.ALLAMA__PUBLIC_APP_URL,
+        auth_allowed_types=list(config.ALLAMA__AUTH_TYPES),
+        auth_basic_enabled=keyvalues["auth_basic_enabled"],
+        oauth_google_enabled=keyvalues["oauth_google_enabled"],
+        saml_enabled=keyvalues["saml_enabled"],
+    )
+
+
+@app.get("/health", tags=["public"])
+def check_health() -> HealthResponse:
+    return HealthResponse(status="ok")
+
+
+@app.get("/ready", tags=["public"])
+async def check_ready(session: AsyncDBSession) -> ReadinessResponse:
+    """Readiness check - returns 200 only after startup and registry sync complete.
+
+    Use this endpoint for Docker healthchecks to ensure the API has finished
+    initializing and the platform registry is synced before accepting traffic.
+
+    Returns a detailed response including registry sync status.
+    """
+    expected_version = allama_registry.__version__
+
+    # Check registry sync status
+    repos_service = PlatformRegistryReposService(session)
+    repo = await repos_service.get_repository(DEFAULT_REGISTRY_ORIGIN)
+
+    if repo is None or repo.current_version is None:
+        registry_status = RegistryStatus(
+            synced=False,
+            expected_version=expected_version,
+            current_version=None,
+        )
+    else:
+        registry_status = RegistryStatus(
+            synced=repo.current_version.version == expected_version,
+            expected_version=expected_version,
+            current_version=repo.current_version.version,
+        )
+
+    # Not ready if registry is not synced
+    if not registry_status.synced:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=ReadinessResponse(
+                status="not_ready",
+                registry=registry_status,
+            ).model_dump(),
+        )
+
+    return ReadinessResponse(
+        status="ready",
+        registry=registry_status,
+    )

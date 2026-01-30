@@ -1,0 +1,60 @@
+name: Lint python
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - allama/**
+      - packages/**
+      - alembic/**
+      - tests/**
+      - pyproject.toml
+      - .github/workflows/lint-python.yml
+  pull_request:
+    branches: ["main", "staging"]
+    paths:
+      - allama/**
+      - packages/**
+      - alembic/**
+      - tests/**
+      - pyproject.toml
+      - .github/workflows/lint-python.yml
+
+permissions:
+  contents: read
+
+jobs:
+  ruff:
+    runs-on: blacksmith-4vcpu-ubuntu-2204
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/ruff-action@v3
+        with:
+          src: allama/
+          version: latest
+          args: check --no-fix
+
+      - uses: astral-sh/ruff-action@v3
+        with:
+          src: allama/
+          version: latest
+          args: format --diff
+
+  pyright:
+    runs-on: blacksmith-4vcpu-ubuntu-2204
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --no-install-project --group lint
+
+      - name: Run basedpyright
+        run: uv run --no-sync basedpyright --warnings --threads 4

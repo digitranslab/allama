@@ -1,0 +1,12 @@
+title: Core AI Action Integration Test
+description: >
+  Test that the core.ai_action UDF works as expected.
+  Requires `openai.OPENAI_API_KEY` secret.
+entrypoint:
+  ref: tell_me_something_intereesting
+
+actions:
+  - ref: tell_me_something_intereesting
+    action: core.ai_action
+    args:
+      prompt: "Please tell me something interesting"

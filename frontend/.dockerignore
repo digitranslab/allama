@@ -1,0 +1,8 @@
+.husky
+.next
+build
+node_modules
+tests
+# Ignore Dockerfiles
+Dockerfile.prod
+Dockerfile

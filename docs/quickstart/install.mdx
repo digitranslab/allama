@@ -1,0 +1,72 @@
+---
+title: Installation
+icon: download
+---
+
+import DeploymentNote from "/snippets/deployment-note.mdx";
+import PublicUrlNote from "/snippets/public-url-note.mdx";
+import BasicAuthWarning from "/snippets/basic-auth-warning.mdx";
+
+<Info>
+  The following is a quickstart guide. Need more help? Check out Allama's full
+  [self-hosting guide](/self-hosting/overview).
+</Info>
+
+Allama supports three deployment options:
+
+- Docker Compose
+- AWS Fargate via Terraform
+- Kubernetes via Helm (coming soon)
+
+### Docker Compose
+
+<DeploymentNote />
+
+Deploy a local Allama stack using Docker Compose. View step-by-step instructions [here](https://docs.allama.com/self-hosting/deployment-options/docker-compose).
+
+<BasicAuthWarning />
+
+```bash
+# 1. Setup .env configs and secrets (you'll be prompted for superadmin email)
+curl -o env.sh https://raw.githubusercontent.com/digitranslab/allama/0.53.25/env.sh
+curl -o .env.example https://raw.githubusercontent.com/digitranslab/allama/0.53.25/.env.example
+chmod +x env.sh && ./env.sh
+
+# 2. Download Caddyfile
+curl -o Caddyfile https://raw.githubusercontent.com/digitranslab/allama/0.53.25/Caddyfile
+
+# 3. Download Docker Compose file
+curl -o docker-compose.yml https://raw.githubusercontent.com/digitranslab/allama/0.53.25/docker-compose.yml
+
+# Run Allama
+docker compose up -d
+```
+
+<PublicUrlNote />
+
+Check out the generated `.env` file to better understand Allama's configurations.
+You can also view the template `.env.example` file [here](https://github.com/digitranslab/allama/blob/0.53.25/.env.example).
+
+### AWS Fargate
+
+**For advanced users:** deploy a production-ready Allama stack on AWS Fargate using Terraform. View step-by-step instructions [here](https://docs.allama.com/self-hosting/deployment-options/aws-ecs).
+
+```bash
+# Download Terraform files
+git clone https://github.com/digitranslab/terraform-fargate
+
+# Create and add encryption keys to AWS Secrets Manager
+./scripts/create-aws-secrets.sh
+
+# Run Terraform to deploy Allama
+terraform init
+terraform apply
+```
+
+### Kubernetes
+
+Coming soon.
+
+## Next steps
+
+Learn how to [log into Allama](/quickstart/admin) and create your [first workflow](/quickstart/tutorial).

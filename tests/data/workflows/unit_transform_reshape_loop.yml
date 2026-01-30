@@ -1,0 +1,11 @@
+title: Reshape loop
+description: Test that we can loop reshape actions
+entrypoint:
+  ref: a
+
+actions:
+  - ref: a
+    action: core.transform.reshape
+    for_each: ${{ for var.x in [1, 2, 3] }}
+    args:
+      value: I received ${{ var.x }} from you
