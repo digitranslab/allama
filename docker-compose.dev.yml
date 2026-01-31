@@ -290,7 +290,7 @@ services:
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/.next:/app/.next
-      - ./frontend/node_modules:/app/node_modules
+      - /app/node_modules
     restart: unless-stopped
     ports:
       - ${UI_PORT:-3000}:3000
