@@ -175,4 +175,62 @@
     border-radius: 4px;
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   }
+
+  /* CodeMirror dark mode styles */
+  .dark .cm-editor {
+    background-color: hsl(var(--muted)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .dark .cm-content {
+    caret-color: hsl(var(--foreground)) !important;
+  }
+
+  .dark .cm-cursor {
+    border-left-color: hsl(var(--foreground)) !important;
+  }
+
+  .dark .cm-activeLine {
+    background-color: hsl(var(--accent)) !important;
+  }
+
+  .dark .cm-gutters {
+    background-color: hsl(var(--muted)) !important;
+    border-right-color: hsl(var(--border)) !important;
+    color: hsl(var(--muted-foreground)) !important;
+  }
+
+  .dark .cm-activeLineGutter {
+    background-color: hsl(var(--accent)) !important;
+  }
+
+  .dark .cm-selectionBackground,
+  .dark .cm-content ::selection {
+    background-color: hsl(var(--accent)) !important;
+  }
+
+  .dark .cm-line {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* YAML syntax highlighting for dark mode */
+  .dark .cm-editor .ͼb {
+    color: #93c5fd !important; /* property names - light blue */
+  }
+
+  .dark .cm-editor .ͼc {
+    color: #86efac !important; /* strings - light green */
+  }
+
+  .dark .cm-editor .ͼd {
+    color: #93c5fd !important; /* numbers - light blue */
+  }
+
+  .dark .cm-editor .ͼe {
+    color: #fdba74 !important; /* booleans - light orange */
+  }
+
+  .dark .cm-placeholder {
+    color: hsl(var(--muted-foreground)) !important;
+  }
 }

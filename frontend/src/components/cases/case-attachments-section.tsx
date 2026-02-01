@@ -90,7 +90,7 @@ function getFileColor(contentType: string) {
     return "text-orange-600 bg-orange-50"
   if (contentType.startsWith("audio/")) return "text-purple-600 bg-purple-50"
   if (contentType.startsWith("video/")) return "text-blue-600 bg-blue-50"
-  return "text-gray-600 bg-gray-50"
+  return "text-muted-foreground bg-muted"
 }
 
 function formatFileSize(bytes: number): string {

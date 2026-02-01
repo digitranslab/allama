@@ -369,13 +369,12 @@ export const YamlStyledEditor = React.forwardRef<
           <span>{fieldState.error.message ?? "Invalid YAML"}</span>
         </div>
       )}
-      <div className="relative rounded-md border-[0.5px] border-border shadow-sm">
+      <div className="relative rounded-md border-[0.5px] border-border bg-background shadow-sm">
         <CodeMirror
           value={buffer}
           height="auto"
           extensions={allExtensions}
           onChange={handleChange}
-          theme="light"
           basicSetup={{
             foldGutter: true,
             dropCursor: true,
@@ -869,7 +868,6 @@ export function YamlViewOnlyEditor({
           value={textValue}
           height="auto"
           extensions={extensions}
-          theme="light"
           editable={false}
           basicSetup={{
             foldGutter: true,

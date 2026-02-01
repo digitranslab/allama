@@ -54,6 +54,7 @@ import { Spinner } from "@/components/loading/spinner"
 import { CreateTableDialog } from "@/components/tables/table-create-dialog"
 import { TableImportTableDialog } from "@/components/tables/table-import-table-dialog"
 import { TableInsertButton } from "@/components/tables/table-insert-button"
+import { ThemeToggle } from "@/components/theme-toggle"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -219,7 +220,7 @@ function TablesActions() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="h-7 bg-white">
+          <Button variant="outline" size="sm" className="h-7 bg-background">
             <Plus className="mr-1 h-3.5 w-3.5" />
             New table
             <ChevronDown className="ml-1 h-3.5 w-3.5" />
@@ -272,7 +273,7 @@ function IntegrationsActions() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="h-7 bg-white">
+          <Button variant="outline" size="sm" className="h-7 bg-background">
             <Plus className="mr-1 h-3.5 w-3.5" />
             Add integration
             <ChevronDown className="ml-1 h-3.5 w-3.5" />
@@ -324,7 +325,7 @@ function AgentsActions() {
   const workspaceId = useWorkspaceId()
 
   return (
-    <Button variant="outline" size="sm" className="h-7 bg-white" asChild>
+    <Button variant="outline" size="sm" className="h-7 bg-background" asChild>
       <Link href={`/workspaces/${workspaceId}/agents/new`}>
         <Plus className="mr-1 h-3.5 w-3.5" />
         New agent
@@ -377,7 +378,7 @@ function CasesActions() {
           <Button
             variant="outline"
             size="sm"
-            className="h-7 bg-white"
+            className="h-7 bg-background"
             onClick={() => setDialogOpen(true)}
           >
             <Plus className="mr-1 h-3.5 w-3.5" />
@@ -884,7 +885,7 @@ function CredentialsActions() {
       </div>
       <NewCredentialsDialog>
         <NewCredentialsDialogTrigger asChild>
-          <Button variant="outline" size="sm" className="h-7 bg-white">
+          <Button variant="outline" size="sm" className="h-7 bg-background">
             <Plus className="mr-1 h-3.5 w-3.5" />
             Add credential
           </Button>
@@ -898,7 +899,7 @@ function VariablesActions() {
   return (
     <NewVariableDialog>
       <NewVariableDialogTrigger asChild>
-        <Button variant="outline" size="sm" className="h-7 bg-white">
+        <Button variant="outline" size="sm" className="h-7 bg-background">
           <Plus className="mr-1 h-3.5 w-3.5" />
           Add variable
         </Button>
@@ -1351,6 +1352,8 @@ export function ControlsHeader({
           : caseId && (
               <CaseStatusControl caseId={caseId} workspaceId={workspaceId} />
             )}
+
+        <ThemeToggle />
 
         {onToggleChat && (
           <Button

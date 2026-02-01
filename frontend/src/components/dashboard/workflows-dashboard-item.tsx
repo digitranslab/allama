@@ -31,7 +31,7 @@ export function WorkflowItem({
             <span
               className={cn(
                 "flex size-2 rounded-full",
-                workflow.status === "online" ? "bg-emerald-600" : "bg-gray-400"
+                workflow.status === "online" ? "bg-emerald-600" : "bg-muted-foreground"
               )}
             />
           </div>

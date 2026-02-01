@@ -135,7 +135,7 @@ export default React.memo(function TriggerNode({
                     "ml-2 inline-block size-2 rounded-full ",
                     workflow.webhook.status === "online"
                       ? "bg-emerald-500"
-                      : "bg-gray-300"
+                      : "bg-muted-foreground"
                   )}
                 />
               </div>
