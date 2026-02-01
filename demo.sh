@@ -187,7 +187,7 @@ ALLAMA__LOCAL_REPOSITORY_ENABLED=false
 ALLAMA__LOCAL_REPOSITORY_PATH=~/dev/org/internal-registry
 
 # --- Enterprise ---
-ALLAMA__FEATURE_FLAGS=""
+ALLAMA__FEATURE_FLAGS=git-sync,agent-approvals,agent-presets,case-durations,case-tasks
 EOF
 
     print_status "Created .env file with all required configuration"
