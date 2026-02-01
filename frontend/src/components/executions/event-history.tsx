@@ -69,8 +69,8 @@ export function WorkflowExecutionEventHistory({
             key={index}
             className={cn(
               buttonVariants({ variant: "default", size: "sm" }),
-              "justify-start space-x-1 bg-background text-muted-foreground shadow-none hover:cursor-default hover:bg-gray-100",
-              event.event_id === selectedEvent?.event_id && "bg-gray-200",
+              "justify-start space-x-1 bg-background text-muted-foreground shadow-none hover:cursor-default hover:bg-muted",
+              event.event_id === selectedEvent?.event_id && "bg-muted",
               ERROR_EVENT_TYPES.includes(event.event_type) &&
                 "bg-red-100 hover:bg-red-200"
             )}

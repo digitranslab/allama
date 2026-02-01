@@ -102,8 +102,8 @@ export function WorkflowExecutionNav({
                 href={`${baseUrl}/executions/${executionId}`}
                 className={cn(
                   buttonVariants({ variant: "default", size: "sm" }),
-                  "justify-start bg-background text-muted-foreground shadow-none hover:cursor-default hover:bg-gray-100",
-                  executionId === currExecutionIdDecoded && "bg-gray-200"
+                  "justify-start bg-background text-muted-foreground shadow-none hover:cursor-default hover:bg-muted",
+                  executionId === currExecutionIdDecoded && "bg-muted"
                 )}
               >
                 <div className="flex items-center">

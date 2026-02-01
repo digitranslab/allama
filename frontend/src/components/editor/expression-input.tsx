@@ -330,7 +330,7 @@ function ExpressionInputCore({
 
   return (
     <div className={cn("relative", className)}>
-      <div className="relative rounded-md border-[0.5px] border-border shadow-sm">
+      <div className="relative rounded-md border-[0.5px] border-border bg-background shadow-sm">
         <CodeMirror
           value={safeValue}
           height="auto"

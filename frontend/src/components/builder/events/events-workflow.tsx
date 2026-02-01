@@ -327,7 +327,7 @@ export function WorkflowEvents({
                   return (
                     <div key={actionRef}>
                       {/* Vertical timeline line */}
-                      <div className="absolute inset-y-5 left-[20px] w-px bg-gray-300" />
+                      <div className="absolute inset-y-5 left-[20px] w-px bg-border" />
                       <div
                         className={cn(
                           "group flex h-9 cursor-pointer items-center border-b border-muted/30 p-3 text-xs transition-all last:border-b-0 hover:bg-muted/50",
@@ -567,7 +567,7 @@ export function getTriggerTypeIcon(
     default:
       console.error(`Unknown trigger type: ${triggerType}`)
       return (
-        <QuestionMarkIcon className={cn("size-3 text-gray-600", className)} />
+        <QuestionMarkIcon className={cn("size-3 text-muted-foreground", className)} />
       )
   }
 }

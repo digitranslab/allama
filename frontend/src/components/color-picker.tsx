@@ -23,7 +23,7 @@ export const ColorPicker = ({
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <button
-            className="size-6 rounded border border-gray-200 shadow-sm"
+            className="size-6 rounded border border-border shadow-sm"
             style={{ backgroundColor: value }}
             aria-label="Pick a color"
           />
@@ -35,7 +35,7 @@ export const ColorPicker = ({
           />
         </PopoverContent>
       </Popover>
-      {showInput && <div className="text-sm text-gray-600">{value}</div>}
+      {showInput && <div className="text-sm text-muted-foreground">{value}</div>}
     </div>
   )
 }

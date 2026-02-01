@@ -949,7 +949,7 @@ export const WorkflowCanvas = React.forwardRef<
         connectionLineType={ConnectionLineType.SmoothStep}
         onPaneContextMenu={onPaneContextMenu}
       >
-        <Background bgColor="#fcfcfc" />
+        <Background className="!bg-muted" />
         <Controls className="rounded-sm" fitViewOptions={fitViewOptions} />
         <Panel position="bottom-right" className="flex items-center gap-1">
           <Badge

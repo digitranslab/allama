@@ -19,7 +19,7 @@ export const statusStyles: Record<
   },
   not_configured: {
     label: "Not configured",
-    style: "bg-gray-100 text-gray-800 border-transparent",
+    style: "bg-muted text-muted-foreground border-transparent",
   },
 }
 

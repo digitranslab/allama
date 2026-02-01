@@ -276,7 +276,7 @@ function CommentTextBox({
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-7 rounded-md text-gray-400 hover:bg-gray-100 hover:text-muted-foreground"
+                className="size-7 rounded-md text-muted-foreground hover:bg-muted hover:text-muted-foreground"
                 disabled
               >
                 <PaperclipIcon className="size-4" />
@@ -286,7 +286,7 @@ function CommentTextBox({
                 variant="ghost"
                 size="icon"
                 type="submit"
-                className="size-7 rounded-md text-gray-400 hover:bg-gray-200/80 hover:text-muted-foreground"
+                className="size-7 rounded-md text-muted-foreground hover:bg-muted hover:text-muted-foreground"
                 disabled={!form.watch("content").trim()}
               >
                 <ArrowUpIcon className="size-4" />

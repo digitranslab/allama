@@ -265,7 +265,7 @@ export function EventGeneralInfo({ event }: { event: WorkflowExecutionEvent }) {
         <DescriptorBadge
           text={formattedEventType}
           className={cn(
-            "bg-gray-100/80",
+            "bg-muted/80",
             ERROR_EVENT_TYPES.includes(event_type) && "bg-rose-200",
             event_type == "WORKFLOW_EXECUTION_STARTED" && "bg-sky-200/70",
             event_type == "WORKFLOW_EXECUTION_COMPLETED" && "bg-emerald-200/70",
