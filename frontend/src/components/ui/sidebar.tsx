@@ -131,7 +131,7 @@ const SidebarProvider = React.forwardRef<
               } as React.CSSProperties
             }
             className={cn(
-              "group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-zinc-50 has-[[data-variant=inset]]:dark:bg-zinc-950",
+              "group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar",
               className
             )}
             ref={ref}
@@ -188,7 +188,7 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-zinc-50 dark:bg-zinc-950 p-0 text-sidebar-foreground [&>button]:hidden"
+            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -244,7 +244,7 @@ const Sidebar = React.forwardRef<
         >
           <div
             data-sidebar="sidebar"
-            className="flex h-full w-full flex-col bg-zinc-50 dark:bg-zinc-950 group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
+            className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
           >
             {children}
           </div>
@@ -320,7 +320,7 @@ const SidebarInset = React.forwardRef<
       className={cn(
         "relative flex min-w-0 w-full flex-1 flex-col h-[calc(100vh-2*0.5rem)]",
         // Standard inset styling with selective margins: only top/bottom plus outer edges.
-        "md:peer-data-[variant=inset]:mt-2 md:peer-data-[variant=inset]:mb-2 md:peer-data-[variant=inset]:first:ml-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:last:mr-2 md:peer-data-[variant=inset]:rounded-lg md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-zinc-200 md:peer-data-[variant=inset]:dark:border-zinc-800 md:peer-data-[variant=inset]:bg-background",
+        "md:peer-data-[variant=inset]:mt-2 md:peer-data-[variant=inset]:mb-2 md:peer-data-[variant=inset]:first:ml-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:last:mr-2 md:peer-data-[variant=inset]:rounded-lg md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-border md:peer-data-[variant=inset]:bg-background",
         className
       )}
       {...props}
