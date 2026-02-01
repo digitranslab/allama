@@ -186,8 +186,8 @@ NEXT_PUBLIC_DISABLE_SESSION_RECORDING=true
 ALLAMA__LOCAL_REPOSITORY_ENABLED=false
 ALLAMA__LOCAL_REPOSITORY_PATH=~/dev/org/internal-registry
 
-# --- Enterprise ---
-ALLAMA__FEATURE_FLAGS=""
+# --- Enterprise Features (all enabled) ---
+ALLAMA__FEATURE_FLAGS=git-sync,agent-approvals,agent-presets,case-durations,case-tasks
 EOF
 
     print_status "Created .env file with all required configuration"
