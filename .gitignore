@@ -12,6 +12,13 @@ node_modules/
 .trees/
 .worktrees/
 
+# AI assistant configuration (Kiro, Claude)
+.kiro/
+.claude/
+
+# Benchmarks (internal)
+.benchmarks/
+
 # UV
 
 # Terraform-related files
@@ -235,4 +242,3 @@ cython_debug/
 
 
 Marketing.md
-GITHUB_SETUP_GUIDE.md
