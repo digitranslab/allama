@@ -8,9 +8,9 @@ from __future__ import annotations
 import asyncio
 
 from aiocache import Cache, cached
+from allama_registry import RegistrySecretType
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from allama_registry import RegistrySecretType
 
 from allama.db.engine import get_async_session_context_manager
 from allama.db.models import (

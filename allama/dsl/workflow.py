@@ -21,17 +21,17 @@ from temporalio.exceptions import (
 )
 
 with workflow.unsafe.imports_passed_through():
+    import allama_registry  # noqa  # pyright: ignore[reportUnusedImport]
     import dateparser  # noqa: F401  # pyright: ignore[reportUnusedImport]
     import jsonpath_ng.ext.parser  # noqa: F401  # pyright: ignore[reportUnusedImport]
     import jsonpath_ng.lexer  # noqa  # pyright: ignore[reportUnusedImport]
     import jsonpath_ng.parser  # noqa  # pyright: ignore[reportUnusedImport]
-    import allama_registry  # noqa  # pyright: ignore[reportUnusedImport]
-    from pydantic import ValidationError
     from allama_ee.agent.types import AgentWorkflowID
     from allama_ee.agent.workflows.durable import (
         AgentWorkflowArgs,
         DurableAgentWorkflow,
     )
+    from pydantic import ValidationError
 
     from allama import config, identifiers
     from allama.agent.aliases import build_agent_alias

@@ -12,11 +12,11 @@ from typing import (
 
 import temporalio.api.enums.v1
 import temporalio.api.history.v1
+from allama_ee.agent.types import AgentWorkflowID
+from allama_ee.agent.workflows.durable import AgentWorkflowArgs
 from google.protobuf.json_format import MessageToDict
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer
 from temporalio.client import WorkflowExecution, WorkflowExecutionStatus
-from allama_ee.agent.types import AgentWorkflowID
-from allama_ee.agent.workflows.durable import AgentWorkflowArgs
 
 from allama.auth.types import Role
 from allama.dsl.action import ScatterActionInput

@@ -12,11 +12,11 @@ Key design principles:
 
 from allama.agent.common.adapter_base import BaseHarnessAdapter
 from allama.agent.common.config import (
-    JAILED_CONTROL_SOCKET_PATH,
-    JAILED_LLM_SOCKET_PATH,
     ALLAMA__AGENT_SANDBOX_MEMORY_MB,
     ALLAMA__AGENT_SANDBOX_TIMEOUT,
     ALLAMA__DISABLE_NSJAIL,
+    JAILED_CONTROL_SOCKET_PATH,
+    JAILED_LLM_SOCKET_PATH,
 )
 from allama.agent.common.exceptions import (
     AgentSandboxError,

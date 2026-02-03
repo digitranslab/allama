@@ -5,6 +5,11 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, NamedTuple, TypedDict
 from typing import cast as typing_cast
 
+from allama_registry import (
+    RegistryOAuthSecret,
+    RegistrySecretType,
+    RegistrySecretTypeValidator,
+)
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails, to_jsonable_python
 from sqlalchemy import (
@@ -18,11 +23,6 @@ from sqlalchemy import (
     text,
     tuple_,
     union_all,
-)
-from allama_registry import (
-    RegistryOAuthSecret,
-    RegistrySecretType,
-    RegistrySecretTypeValidator,
 )
 
 from allama.db.models import (

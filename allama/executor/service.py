@@ -36,11 +36,11 @@ from allama.dsl.schemas import (
     TemplateExecutionContext,
 )
 from allama.exceptions import (
+    AllamaAuthorizationError,
+    AllamaException,
     ExecutionError,
     LoopExecutionError,
     RegistryValidationError,
-    AllamaAuthorizationError,
-    AllamaException,
 )
 from allama.executor import registry_resolver
 from allama.executor.backends.base import ExecutorBackend

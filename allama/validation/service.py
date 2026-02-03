@@ -4,16 +4,16 @@ from itertools import chain
 from typing import Any
 
 import lark
+from allama_registry import (
+    RegistryOAuthSecret,
+    RegistrySecret,
+)
 from pydantic import (
     ConfigDict,
     ValidationError,
 )
 from sqlalchemy.exc import MultipleResultsFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from allama_registry import (
-    RegistryOAuthSecret,
-    RegistrySecret,
-)
 
 from allama.auth.types import Role
 from allama.concurrency import GatheringTaskGroup
@@ -21,7 +21,7 @@ from allama.db.engine import get_async_session_context_manager
 from allama.dsl.common import DSLInput, ExecuteSubflowArgs
 from allama.dsl.enums import PlatformAction
 from allama.dsl.schemas import ActionStatement
-from allama.exceptions import RegistryValidationError, AllamaNotFoundError
+from allama.exceptions import AllamaNotFoundError, RegistryValidationError
 from allama.expressions import patterns
 from allama.expressions.common import ExprType
 from allama.expressions.eval import extract_expressions, is_template_only

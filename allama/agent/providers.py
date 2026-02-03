@@ -1,6 +1,8 @@
 import os
 
 import orjson
+from allama_registry import secrets
+from allama_registry.integrations.aws_boto3 import get_sync_session
 from google.oauth2 import service_account
 from pydantic_ai.models import Model
 from pydantic_ai.models.anthropic import AnthropicModel, AnthropicModelSettings
@@ -12,8 +14,6 @@ from pydantic_ai.providers.bedrock import BedrockProvider
 from pydantic_ai.providers.google import GoogleProvider
 from pydantic_ai.providers.ollama import OllamaProvider
 from pydantic_ai.providers.openai import OpenAIProvider
-from allama_registry import secrets
-from allama_registry.integrations.aws_boto3 import get_sync_session
 
 
 def get_model(

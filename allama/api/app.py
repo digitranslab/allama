@@ -3,6 +3,8 @@ from collections.abc import Callable
 from contextlib import asynccontextmanager
 
 import allama_registry
+from allama_ee.admin.router import router as admin_router
+from allama_ee.agent.approvals.router import router as approvals_router
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,8 +14,6 @@ from pydantic import BaseModel
 from pydantic_core import to_jsonable_python
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from allama_ee.admin.router import router as admin_router
-from allama_ee.agent.approvals.router import router as approvals_router
 
 from allama import __version__ as APP_VERSION
 from allama import config
@@ -26,10 +26,10 @@ from allama.agent.router import router as agent_router
 from allama.agent.session.router import router as agent_session_router
 from allama.api.common import (
     add_temporal_search_attributes,
+    allama_exception_handler,
     bootstrap_role,
     custom_generate_unique_id,
     generic_exception_handler,
-    allama_exception_handler,
 )
 from allama.auth.dependencies import require_auth_type_enabled
 from allama.auth.enums import AuthType
@@ -67,7 +67,7 @@ from allama.cases.tags.router import router as case_tags_router
 from allama.contexts import ctx_role
 from allama.db.dependencies import AsyncDBSession
 from allama.editor.router import router as editor_router
-from allama.exceptions import EntitlementRequired, AllamaException
+from allama.exceptions import AllamaException, EntitlementRequired
 from allama.feature_flags import (
     FeatureFlag,
     FlagLike,

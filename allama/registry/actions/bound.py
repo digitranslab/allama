@@ -11,8 +11,8 @@ import json
 from collections.abc import Callable, Mapping
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 from allama_registry import RegistrySecretType
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
 from allama.exceptions import RegistryActionError, RegistryValidationError
 from allama.expressions.expectations import create_expectation_model

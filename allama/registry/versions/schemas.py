@@ -6,8 +6,8 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, Field
 from allama_registry import RegistrySecretType
+from pydantic import BaseModel, Field
 
 from allama.registry.actions.schemas import (
     RegistryActionCreate,

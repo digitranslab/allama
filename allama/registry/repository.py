@@ -14,6 +14,7 @@ from timeit import default_timer
 from types import ModuleType
 from typing import Annotated, Any, Literal, cast, get_args, get_origin, get_type_hints
 
+from allama_registry import RegistrySecretType
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -24,7 +25,6 @@ from pydantic import (
 )
 from pydantic_core import to_jsonable_python
 from sqlalchemy.ext.asyncio import AsyncSession
-from allama_registry import RegistrySecretType
 from typing_extensions import Doc
 
 from allama import config

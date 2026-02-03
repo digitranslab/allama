@@ -1,6 +1,6 @@
+from allama_registry import RegistrySecret
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy.exc import IntegrityError
-from allama_registry import RegistrySecret
 
 from allama.auth.credentials import RoleACL
 from allama.auth.types import AccessLevel, Role

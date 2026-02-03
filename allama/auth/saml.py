@@ -21,6 +21,7 @@ from allama.api.common import bootstrap_role
 from allama.auth.dependencies import ServiceRole
 from allama.auth.users import AuthBackendStrategyDep, UserManagerDep, auth_backend
 from allama.config import (
+    ALLAMA__PUBLIC_API_URL,
     SAML_ACCEPTED_TIME_DIFF,
     SAML_ALLOW_UNSOLICITED,
     SAML_AUTHN_REQUESTS_SIGNED,
@@ -31,7 +32,6 @@ from allama.config import (
     SAML_SIGNED_RESPONSES,
     SAML_VERIFY_SSL_ENTITY,
     SAML_VERIFY_SSL_METADATA,
-    ALLAMA__PUBLIC_API_URL,
     XMLSEC_BINARY_PATH,
 )
 from allama.db.engine import get_async_session

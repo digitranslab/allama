@@ -5,8 +5,8 @@ import sys
 from collections.abc import Callable
 from typing import Any, Literal, NoReturn
 
-from pydantic import BaseModel, TypeAdapter
 from allama_registry import RegistrySecretTypeValidator
+from pydantic import BaseModel, TypeAdapter
 
 from allama import config
 from allama.db.models import RegistryAction

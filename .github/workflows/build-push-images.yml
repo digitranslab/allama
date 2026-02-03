@@ -2,12 +2,12 @@ name: Publish images
 
 on:
   push:
-    branches: ["staging", "preview"]
-    tags:
-      - "*.*.*"
-      - "nightly-*"
-  schedule:
-    - cron: "0 0 * * *"  # Nightly at midnight UTC
+    branches: ["main"]
+  #   tags:
+  #     - "*.*.*"
+  #     - "nightly-*"
+  # schedule:
+  #   - cron: "0 0 * * *"  # Nightly at midnight UTC
 
 env:
   REGISTRY: ghcr.io

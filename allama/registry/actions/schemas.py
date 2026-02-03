@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, Literal, TypedDict
 
 import yaml
+from allama_registry import RegistrySecret, RegistrySecretType
 from pydantic import (
     UUID4,
     BaseModel,
@@ -15,7 +16,6 @@ from pydantic import (
     computed_field,
     model_validator,
 )
-from allama_registry import RegistrySecret, RegistrySecretType
 
 from allama.exceptions import AllamaValidationError
 from allama.expressions.schemas import ExpectedField
