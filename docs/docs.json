@@ -103,6 +103,21 @@
             "openapi": "/openapi.yml"
           }
         ]
+      },
+      {
+        "tab": "Blog",
+        "groups": [
+          {
+            "group": "Latest Posts",
+            "pages": [
+              "blog/introducing-allama",
+              "blog/automate-phishing-analysis",
+              "blog/allama-vs-splunk-vs-xsoar",
+              "blog/ai-powered-security-workflows",
+              "blog/why-open-source"
+            ]
+          }
+        ]
       }
     ],
     "global": {
@@ -119,7 +134,7 @@
         },
         {
           "anchor": "Join Discord",
-          "href": "https://discord.gg/n3GF4qxFU8",
+          "href": "https://discord.gg/2mK6h9rp",
           "icon": "discord"
         }
       ]
@@ -161,7 +176,7 @@
   },
   "footer": {
     "socials": {
-      "discord": "https://discord.gg/n3GF4qxFU8",
+      "discord": "https://discord.gg/2mK6h9rp",
       "github": "https://github.com/digitranslab/allama"
     }
   }

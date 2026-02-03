@@ -1,0 +1,104 @@
+---
+title: "Introducing Allama: Open-Source AI Security Automation"
+description: "Meet Allama, the open-source platform that brings AI-powered automation to security operations. Learn why we built it and how to get started."
+date: "2026-02-03"
+author: "DigitransLab Team"
+---
+
+# Introducing Allama: Open-Source AI Security Automation
+
+Security teams are drowning. The average Security Operations Centre processes over 10,000 alerts per day, yet most organisations have fewer than five analysts to handle them. The result? Alert fatigue, missed threats, and burnout.
+
+**Allama** is our answer to this crisis. It's an open-source security automation platform that deploys AI-powered agents to handle the repetitive work, freeing your analysts to focus on what matters: hunting threats and protecting your organisation.
+
+## Why We Built Allama
+
+The security automation market is dominated by expensive, closed-source platforms that require extensive professional services to deploy. Splunk SOAR, Palo Alto XSOAR, and similar tools can cost hundreds of thousands of pounds annually, putting them out of reach for most organisations.
+
+Meanwhile, the threat landscape has evolved. Attackers now use AI to automate reconnaissance and exploitation. Defenders need the same capabilities, but without the enterprise price tag.
+
+We built Allama because we believe:
+
+- **Security tools should be transparent.** You should be able to inspect every line of code that protects your infrastructure.
+- **Automation should be accessible.** A startup with three engineers deserves the same automation capabilities as a Fortune 500 company.
+- **AI should augment analysts, not replace them.** The goal is to eliminate toil, not jobs.
+
+## Key Features
+
+### Visual Workflow Builder
+
+Build sophisticated security playbooks without writing code. Drag actions onto a canvas, connect them, and deploy. Allama handles the complexity of parallel execution, error handling, and state management.
+
+<Frame>
+  <img src="/img/quickstart/tutorial/view-available-actions.png" alt="Allama Visual Workflow Builder" />
+</Frame>
+
+### Autonomous AI Agents
+
+Deploy AI agents that understand security context. Give them natural language instructions like "Investigate this alert and determine if it's a true positive" and they'll execute the appropriate tools, gather evidence, and provide recommendations.
+
+Allama supports multiple AI providers:
+- OpenAI (GPT-4, GPT-4o)
+- Anthropic (Claude 3.5)
+- Azure OpenAI
+- Google (Gemini)
+- Self-hosted models via Ollama
+
+### 80+ Integrations
+
+Connect to your existing security stack:
+
+| Category | Tools |
+|----------|-------|
+| SIEM | Splunk, Elastic, Datadog, Wazuh |
+| EDR | CrowdStrike, SentinelOne |
+| Identity | Okta, Microsoft Entra ID, Google Workspace |
+| Ticketing | Jira, Zendesk, PagerDuty |
+| Communication | Slack, Microsoft Teams, Email |
+| Threat Intel | VirusTotal, URLScan, IPInfo |
+
+### Case Management
+
+Track incidents from detection to resolution. Allama's built-in case management integrates directly with your workflows, automatically creating cases, assigning tasks, and maintaining audit trails.
+
+### Self-Hosted
+
+Your data stays on your infrastructure. Deploy Allama on-premises, in your cloud account, or in air-gapped environments. No telemetry, no vendor lock-in.
+
+## Getting Started
+
+Get Allama running in under five minutes:
+
+```bash
+git clone https://github.com/digitranslab/allama.git
+cd allama
+./demo.sh
+```
+
+Open http://localhost in your browser and log in with:
+- Email: `admin@example.com`
+- Password: `AdminPassword123!`
+
+## What's Next
+
+We're just getting started. Here's what's on our roadmap:
+
+- **More integrations** — We're adding 20+ new integrations every month
+- **Workflow marketplace** — Share and discover community-built playbooks
+- **Enhanced AI capabilities** — Multi-agent collaboration, RAG-powered knowledge bases
+- **Enterprise features** — SSO, audit logging, compliance reporting
+
+## Join the Community
+
+Allama is built in the open, and we'd love your help:
+
+- ⭐ [Star us on GitHub](https://github.com/digitranslab/allama) — It helps others discover the project
+- 💬 [Join our Discord](https://discord.gg/2mK6h9rp) — Chat with the team and community
+- 🐛 [Report issues](https://github.com/digitranslab/allama/issues) — Help us improve
+- 🤝 [Contribute](https://github.com/digitranslab/allama/blob/main/CONTRIBUTING.md) — Code, docs, or feedback
+
+Security automation shouldn't be a luxury. With Allama, it isn't.
+
+---
+
+*Ready to automate your security operations? [Get started now](https://github.com/digitranslab/allama).*

@@ -17,7 +17,7 @@
   <a href="https://github.com/digitranslab/allama/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="License">
   </a>
-  <a href="https://discord.gg/n3GF4qxFU8">
+  <a href="https://discord.gg/2mK6h9rp">
     <img src="https://img.shields.io/discord/1212548097624903681.svg?logo=discord" alt="Discord">
   </a>
   <a href="https://github.com/digitranslab/allama/stargazers">
@@ -542,7 +542,7 @@ just lint
 
 | Channel | Purpose |
 |---------|---------|
-| [Discord](https://discord.gg/n3GF4qxFU8) | Real-time community support and discussion |
+| [Discord](https://discord.gg/2mK6h9rp) | Real-time community support and discussion |
 | [GitHub Issues](https://github.com/digitranslab/allama/issues) | Bug reports and feature requests |
 | [Documentation](https://docs.allama.com) | Comprehensive guides and tutorials |
 

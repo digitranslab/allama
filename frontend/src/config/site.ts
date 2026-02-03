@@ -13,7 +13,7 @@ export const siteConfig: SiteConfig = {
   },
   links: {
     github: "https://github.com/digitranslab/allama",
-    discord: "https://discord.gg/n3GF4qxFU8",
+    discord: "https://discord.gg/2mK6h9rp",
     docs: "https://docs.allama.com",
     playbooks: "https://github.com/digitranslab/allama/tree/main/playbooks",
   },

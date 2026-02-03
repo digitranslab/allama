@@ -1,0 +1,194 @@
+---
+title: "Why We Made Allama Open Source"
+description: "The philosophy behind open-sourcing Allama. Why we believe security tools should be transparent, accessible, and community-driven."
+date: "2026-02-03"
+author: "DigitransLab Team"
+---
+
+# Why We Made Allama Open Source
+
+When we started building Allama, we had a choice: build a proprietary SaaS product or release it as open source. We chose open source, and this post explains why.
+
+## The State of Security Tooling
+
+The security industry has a problem. The tools designed to protect organisations are:
+
+**Expensive**: Enterprise SOAR platforms cost $100,000-500,000+ annually. SIEM solutions charge by data volume, creating perverse incentives to collect less data. Even basic security tools carry hefty per-seat licensing.
+
+**Opaque**: When a security tool makes a decision—blocking traffic, quarantining a file, flagging an alert—you often can't see why. The logic is hidden in proprietary code. You're trusting a black box to protect your most sensitive assets.
+
+**Locked-in**: Once you've built hundreds of playbooks in a vendor's platform, migration is painful. Vendors know this and price accordingly. Your security automation becomes a hostage.
+
+**Slow to adapt**: When a new threat emerges, you wait for the vendor to release an update. When you need a custom integration, you wait for professional services. When you find a bug, you wait for the next release cycle.
+
+This isn't how security should work.
+
+## Our Philosophy
+
+We believe security tools should be:
+
+### Transparent
+
+You should be able to read every line of code that protects your infrastructure. When Allama makes a decision, you can trace exactly why. When you're audited, you can demonstrate exactly how your automation works.
+
+Open source isn't just about cost—it's about trust. In security, trust must be verified.
+
+```
+"Given enough eyeballs, all bugs are shallow."
+— Linus's Law
+```
+
+Security tools benefit enormously from community review. Vulnerabilities are found faster. Edge cases are handled. The code improves through collective expertise.
+
+### Accessible
+
+A three-person startup deserves the same security automation capabilities as a Fortune 500 company. Budget shouldn't determine whether you can automate threat response.
+
+We've seen too many small security teams drowning in alerts because they can't afford automation. That's not acceptable when the technology exists to help them.
+
+### Community-Driven
+
+The best security tools are built by practitioners. The people who use security automation daily understand the problems better than any product manager.
+
+Open source enables this. Users become contributors. Bug reports become pull requests. Feature requests become community discussions. The tool evolves based on real needs, not sales projections.
+
+### Interoperable
+
+Vendor lock-in is antithetical to good security. Your automation should be portable. Your data should be exportable. Your workflows should work with any tool, not just the ones your vendor partners with.
+
+Allama workflows are YAML files. You can version them in Git, review them in pull requests, and migrate them anywhere. No proprietary formats, no lock-in.
+
+## The Business Model
+
+"But how do you make money?"
+
+Fair question. Open source doesn't mean we work for free. Here's our model:
+
+### Open Core
+
+The core Allama platform is free and open source under AGPL-3.0. This includes:
+- Workflow engine
+- Visual builder
+- Case management
+- 80+ integrations
+- AI agent capabilities
+- Self-hosted deployment
+
+### Enterprise Features
+
+For organisations that need additional capabilities, we offer enterprise features:
+- SSO/SAML integration
+- Advanced audit logging
+- Priority support
+- Compliance certifications
+- Custom SLAs
+
+### Managed Hosting
+
+For teams that don't want to manage infrastructure, we offer Allama Cloud:
+- Fully managed deployment
+- Automatic updates
+- 99.9% SLA
+- SOC 2 compliance
+
+### Professional Services
+
+For complex deployments, we offer:
+- Implementation assistance
+- Custom integration development
+- Training and enablement
+- Architecture review
+
+This model aligns our incentives with users. We succeed when Allama is genuinely useful, not when we've locked you into a contract.
+
+## Why AGPL-3.0?
+
+We chose the GNU Affero General Public License (AGPL-3.0) specifically. Here's why:
+
+**Copyleft protection**: If someone modifies Allama and offers it as a service, they must release their modifications. This prevents cloud providers from taking our work, adding proprietary features, and competing against us without contributing back.
+
+**User freedom**: You can run, modify, and distribute Allama freely. You can use it commercially. You can build products on top of it. The only requirement is that modifications remain open source.
+
+**Community benefit**: Improvements flow back to the community. When a user fixes a bug or adds a feature, everyone benefits.
+
+Some companies choose permissive licenses (MIT, Apache) to maximise adoption. We chose AGPL because we believe the security community benefits more from guaranteed openness than from maximum permissiveness.
+
+## How to Contribute
+
+Open source thrives on contribution. Here's how you can help:
+
+### Use Allama
+
+The most valuable contribution is using Allama and providing feedback. Every bug report, feature request, and question helps us improve.
+
+### Report Issues
+
+Found a bug? [Open an issue](https://github.com/digitranslab/allama/issues). Include:
+- What you expected to happen
+- What actually happened
+- Steps to reproduce
+- Your environment details
+
+### Submit Pull Requests
+
+Want to fix a bug or add a feature? We welcome pull requests. See our [contributing guide](https://github.com/digitranslab/allama/blob/main/CONTRIBUTING.md) for details.
+
+Good first contributions:
+- Documentation improvements
+- New integrations
+- Bug fixes
+- Test coverage
+
+### Share Knowledge
+
+- Write blog posts about your Allama workflows
+- Present at security meetups
+- Answer questions in Discord
+- Create video tutorials
+
+### Spread the Word
+
+- Star us on [GitHub](https://github.com/digitranslab/allama)
+- Share on social media
+- Tell your security friends
+- Write honest reviews
+
+## Join the Community
+
+We're building Allama in the open, and we'd love your involvement:
+
+- **GitHub**: [github.com/digitranslab/allama](https://github.com/digitranslab/allama)
+- **Discord**: [discord.gg/2mK6h9rp](https://discord.gg/2mK6h9rp)
+- **Twitter**: [@digitranslab](https://twitter.com/digitranslab)
+
+## The Future
+
+We're just getting started. Our roadmap includes:
+
+- **More integrations**: Adding 20+ new integrations monthly
+- **Workflow marketplace**: Share and discover community playbooks
+- **Enhanced AI**: Multi-agent collaboration, RAG-powered knowledge bases
+- **Mobile app**: Respond to incidents from anywhere
+- **Compliance frameworks**: Pre-built workflows for SOC 2, ISO 27001, etc.
+
+All of this will be open source.
+
+## Closing Thoughts
+
+Security is too important to be gatekept by budget. The tools that protect our digital infrastructure should be transparent, accessible, and community-driven.
+
+That's why we made Allama open source. Not because it's trendy, but because it's right.
+
+If you believe in this vision, [join us](https://github.com/digitranslab/allama).
+
+---
+
+*Ready to try Allama? Get started in 5 minutes:*
+
+```bash
+git clone https://github.com/digitranslab/allama.git
+cd allama
+./demo.sh
+```
+
+*No sales call. No credit card. Just security automation.*

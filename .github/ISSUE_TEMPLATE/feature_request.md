@@ -1,8 +1,8 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
-title: ""
-labels: ""
+name: Feature Request
+about: Suggest an idea for Allama
+title: "[FEATURE] "
+labels: enhancement
 assignees: ""
 ---
 

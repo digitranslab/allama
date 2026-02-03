@@ -1,8 +1,8 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ""
-labels: ""
+name: Bug Report
+about: Report a bug to help us improve Allama
+title: "[BUG] "
+labels: bug
 assignees: ""
 ---
 

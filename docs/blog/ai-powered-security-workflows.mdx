@@ -1,0 +1,431 @@
+---
+title: "Building AI-Powered Security Workflows: A Practical Guide"
+description: "Learn how to integrate LLMs into your security automation. Covers alert summarisation, threat hunting, and incident reporting with code examples."
+date: "2026-02-03"
+author: "DigitransLab Team"
+---
+
+# Building AI-Powered Security Workflows: A Practical Guide
+
+Large Language Models (LLMs) are transforming security operations. Tasks that once required senior analysts—summarising complex alerts, generating threat hunting queries, writing incident reports—can now be augmented with AI.
+
+But integrating AI into security workflows isn't straightforward. You need to understand what LLMs are good at, where they fail, and how to build reliable automation around them.
+
+This guide covers practical AI use cases in security operations, with working code examples you can deploy in Allama today.
+
+## What Are AI-Powered Workflows?
+
+An AI-powered workflow combines traditional automation (API calls, data transforms, conditional logic) with LLM-based reasoning. The LLM acts as a "brain" that can:
+
+- **Understand context** — Parse unstructured data like logs, emails, and alerts
+- **Make decisions** — Classify severity, recommend actions, prioritise work
+- **Generate content** — Write summaries, reports, and communications
+- **Execute tools** — Call APIs and take actions based on reasoning
+
+```
+Traditional Workflow:
+  Alert → Extract Fields → Check Rules → Take Action
+
+AI-Powered Workflow:
+  Alert → LLM Analysis → Contextual Decision → Intelligent Action
+```
+
+## Use Case 1: Alert Summarisation
+
+**The Problem**: Security alerts are verbose. A single alert from CrowdStrike or Splunk can contain hundreds of fields. Analysts waste time parsing JSON to understand what happened.
+
+**The Solution**: Use an LLM to generate human-readable summaries.
+
+### Implementation
+
+```yaml
+- ref: summarise_alert
+  action: core.ai.prompt
+  args:
+    model: gpt-4o
+    system_prompt: |
+      You are a security analyst assistant. Summarise security alerts in a clear, 
+      actionable format. Focus on:
+      1. What happened (attack type, technique)
+      2. What was affected (hosts, users, data)
+      3. Severity assessment
+      4. Recommended immediate actions
+      
+      Be concise. Use bullet points. No fluff.
+    user_prompt: |
+      Summarise this security alert:
+      
+      ```json
+      ${{ JSON(trigger.data) }}
+      ```
+```
+
+### Example Output
+
+**Input**: 500-line CrowdStrike detection JSON
+
+**Output**:
+```
+## Alert Summary: Credential Dumping Detected
+
+**What Happened**:
+- LSASS memory access detected on WORKSTATION-042
+- Technique: T1003.001 (OS Credential Dumping: LSASS Memory)
+- Tool signature matches Mimikatz
+
+**Affected Assets**:
+- Host: WORKSTATION-042 (10.0.1.42)
+- User: jsmith@company.com
+- Domain: CORP.LOCAL
+
+**Severity**: HIGH
+- Credential theft enables lateral movement
+- User has admin privileges on 3 servers
+
+**Recommended Actions**:
+1. Isolate WORKSTATION-042 immediately
+2. Reset jsmith's credentials
+3. Check for lateral movement to admin servers
+4. Preserve memory dump for forensics
+```
+
+**Time saved**: 5-10 minutes per alert
+
+## Use Case 2: Automated Threat Hunting Queries
+
+**The Problem**: Threat hunting requires writing complex queries in Splunk SPL, Elastic KQL, or similar languages. This is time-consuming and error-prone.
+
+**The Solution**: Describe what you're looking for in natural language; let the LLM generate the query.
+
+### Implementation
+
+```yaml
+- ref: generate_hunt_query
+  action: core.ai.prompt
+  args:
+    model: gpt-4o
+    system_prompt: |
+      You are an expert threat hunter. Generate search queries for security 
+      investigation based on natural language descriptions.
+      
+      Output format:
+      - Platform: [Splunk/Elastic/Sentinel]
+      - Query: [the actual query]
+      - Explanation: [what the query does]
+      - False positive considerations: [what might trigger false positives]
+      
+      Generate queries that are:
+      - Specific enough to be useful
+      - Not so broad they return millions of results
+      - Include time bounds where appropriate
+    user_prompt: |
+      Platform: ${{ inputs.platform }}
+      Hunt for: ${{ inputs.description }}
+      Time range: ${{ inputs.time_range }}
+```
+
+### Example
+
+**Input**: 
+- Platform: Splunk
+- Hunt for: "Possible data exfiltration via DNS tunneling"
+- Time range: Last 7 days
+
+**Output**:
+```
+## DNS Tunneling Detection Query
+
+**Platform**: Splunk
+
+**Query**:
+```spl
+index=dns sourcetype=stream:dns
+| eval query_length=len(query)
+| eval subdomain_count=mvcount(split(query, "."))
+| where query_length > 50 OR subdomain_count > 5
+| stats count as query_count, 
+        avg(query_length) as avg_length,
+        dc(query) as unique_queries 
+        by src_ip
+| where query_count > 1000 AND avg_length > 40
+| sort - query_count
+```
+
+**Explanation**: 
+This query identifies hosts making unusually long DNS queries or queries with 
+many subdomains—both indicators of DNS tunneling. It aggregates by source IP 
+and flags hosts with high volumes of suspicious queries.
+
+**False Positive Considerations**:
+- CDN services (Akamai, Cloudflare) may have long domain names
+- Some legitimate services use DNS for configuration
+- Filter out known-good domains before investigation
+```
+
+## Use Case 3: Incident Report Generation
+
+**The Problem**: Writing incident reports is tedious. Analysts spend hours documenting what happened, often after the incident is resolved and details are fuzzy.
+
+**The Solution**: Generate draft reports automatically from case data and workflow execution history.
+
+### Implementation
+
+```yaml
+- ref: generate_report
+  action: core.ai.prompt
+  args:
+    model: gpt-4o
+    system_prompt: |
+      You are a security incident report writer. Generate professional incident 
+      reports suitable for executive review and compliance documentation.
+      
+      Follow this structure:
+      1. Executive Summary (2-3 sentences)
+      2. Incident Timeline
+      3. Technical Details
+      4. Impact Assessment
+      5. Response Actions Taken
+      6. Root Cause Analysis
+      7. Recommendations
+      
+      Use professional language. Be factual. Include specific timestamps and 
+      technical details where available.
+    user_prompt: |
+      Generate an incident report from this case data:
+      
+      Case ID: ${{ inputs.case_id }}
+      Title: ${{ inputs.case.title }}
+      Severity: ${{ inputs.case.severity }}
+      Created: ${{ inputs.case.created_at }}
+      Resolved: ${{ inputs.case.resolved_at }}
+      
+      Events:
+      ${{ JSON(inputs.case.events) }}
+      
+      Actions Taken:
+      ${{ JSON(inputs.case.actions) }}
+      
+      Affected Assets:
+      ${{ JSON(inputs.case.assets) }}
+```
+
+### Example Output
+
+```markdown
+# Incident Report: Ransomware Attempt Blocked
+
+**Case ID**: INC-2024-0142
+**Date**: 15 January 2024
+**Severity**: High
+**Status**: Resolved
+
+## Executive Summary
+
+On 15 January 2024, endpoint detection systems identified and blocked a 
+ransomware execution attempt on WORKSTATION-087. The attack was contained 
+within 4 minutes of initial detection. No data was encrypted or exfiltrated.
+
+## Incident Timeline
+
+| Time (UTC) | Event |
+|------------|-------|
+| 14:23:15 | Malicious email received by user mwilson@company.com |
+| 14:31:42 | User opened attachment (Invoice_Jan2024.xlsm) |
+| 14:31:45 | Macro executed, PowerShell spawned |
+| 14:31:47 | CrowdStrike detected suspicious behaviour |
+| 14:31:48 | Process terminated automatically |
+| 14:32:01 | Host isolated from network |
+| 14:35:22 | Security team notified via Slack |
+| 14:42:00 | Forensic image captured |
+| 15:15:00 | Host reimaged and returned to service |
+
+## Technical Details
+
+**Attack Vector**: Phishing email with malicious Excel macro
+**Malware Family**: LockBit 3.0 (based on behavioural signatures)
+**Initial Access**: T1566.001 (Spearphishing Attachment)
+**Execution**: T1059.001 (PowerShell)
+
+The macro attempted to download a second-stage payload from:
+- hxxps://malicious-domain[.]com/payload.exe (now sinkholed)
+
+## Impact Assessment
+
+- **Data Impact**: None (attack blocked before encryption)
+- **System Impact**: 1 workstation required reimaging
+- **Business Impact**: 45 minutes of user downtime
+- **Financial Impact**: Minimal (estimated $500 in analyst time)
+
+## Response Actions Taken
+
+1. Automated host isolation (CrowdStrike)
+2. User credentials reset
+3. Email quarantined across organisation
+4. Malicious domain blocked at proxy
+5. IOCs shared with threat intelligence team
+
+## Root Cause Analysis
+
+The user received a targeted phishing email that bypassed email security 
+filters. The email impersonated a known vendor and referenced a legitimate 
+ongoing project, suggesting reconnaissance by the attacker.
+
+## Recommendations
+
+1. **Immediate**: Block macro execution in Excel for users who don't require it
+2. **Short-term**: Implement additional email filtering rules for .xlsm attachments
+3. **Long-term**: Deploy phishing simulation training for finance department
+```
+
+**Time saved**: 1-2 hours per incident
+
+## Use Case 4: AI Agent for Investigation
+
+**The Problem**: Complex investigations require multiple steps: gathering data, correlating events, checking threat intelligence, and making decisions. This requires senior analyst expertise.
+
+**The Solution**: Deploy an AI agent that can autonomously investigate alerts.
+
+### Implementation
+
+In Allama, create an AI agent with access to security tools:
+
+```yaml
+- ref: investigate
+  action: core.ai.agent
+  args:
+    model: gpt-4o
+    instructions: |
+      You are a security analyst investigating a potential security incident.
+      
+      Your goal is to determine:
+      1. Is this a true positive or false positive?
+      2. If true positive, what is the severity?
+      3. What response actions are recommended?
+      
+      You have access to the following tools:
+      - virustotal_lookup: Check file hashes, URLs, and domains
+      - splunk_search: Query security logs
+      - crowdstrike_host_info: Get endpoint details
+      - active_directory_lookup: Get user information
+      
+      Investigate thoroughly. Check multiple sources. Document your reasoning.
+    tools:
+      - integrations.virustotal.lookup
+      - integrations.splunk.search
+      - integrations.crowdstrike.get_host
+      - integrations.ldap.user_lookup
+    input: |
+      Investigate this alert:
+      ${{ JSON(trigger.data) }}
+```
+
+The agent will:
+1. Parse the alert to understand what happened
+2. Decide which tools to use
+3. Execute queries and API calls
+4. Correlate findings
+5. Provide a recommendation with reasoning
+
+## Best Practices for AI in Security
+
+### 1. Always Validate AI Output
+
+LLMs can hallucinate. Never trust AI output for critical decisions without validation.
+
+```yaml
+# Good: AI suggests, human approves
+- ref: ai_recommendation
+  action: core.ai.prompt
+  args:
+    prompt: "Recommend response actions..."
+
+- ref: human_approval
+  action: core.approval.request
+  args:
+    message: "AI recommends: ${{ steps.ai_recommendation.result }}. Approve?"
+
+- ref: execute_response
+  action: core.cases.update
+  condition: ${{ steps.human_approval.result.approved }}
+```
+
+### 2. Use Structured Output
+
+Ask for JSON output when you need to parse the response programmatically.
+
+```yaml
+- ref: classify
+  action: core.ai.prompt
+  args:
+    system_prompt: |
+      Classify the alert. Respond in JSON format:
+      {
+        "is_malicious": boolean,
+        "severity": "critical" | "high" | "medium" | "low",
+        "confidence": number (0-1),
+        "reasoning": string
+      }
+```
+
+### 3. Provide Context
+
+LLMs perform better with context. Include relevant information in your prompts.
+
+```yaml
+- ref: analyse_with_context
+  action: core.ai.prompt
+  args:
+    user_prompt: |
+      Analyse this alert in context:
+      
+      **Current Alert**:
+      ${{ JSON(trigger.data) }}
+      
+      **Related Alerts (last 24h)**:
+      ${{ JSON(steps.get_related_alerts.result) }}
+      
+      **Asset Information**:
+      ${{ JSON(steps.get_asset_info.result) }}
+      
+      **User Risk Score**:
+      ${{ steps.get_user_risk.result.score }}
+```
+
+### 4. Set Appropriate Guardrails
+
+Limit what AI agents can do autonomously.
+
+```yaml
+# Define allowed actions
+tools:
+  - integrations.virustotal.lookup  # Read-only, safe
+  - integrations.splunk.search      # Read-only, safe
+  # NOT: integrations.crowdstrike.isolate_host  # Destructive, requires approval
+```
+
+## Supported AI Providers in Allama
+
+Allama supports multiple AI providers:
+
+| Provider | Models | Best For |
+|----------|--------|----------|
+| OpenAI | GPT-4o, GPT-4, GPT-3.5 | General purpose, best quality |
+| Anthropic | Claude 3.5 Sonnet, Claude 3 Opus | Long context, nuanced analysis |
+| Azure OpenAI | GPT-4, GPT-3.5 | Enterprise compliance |
+| Google | Gemini Pro, Gemini Ultra | Multimodal (images + text) |
+| Ollama | Llama 3, Mistral, etc. | Self-hosted, air-gapped |
+
+Configure your provider in Allama's settings or per-workflow.
+
+## Getting Started
+
+Ready to build AI-powered security workflows?
+
+1. [Install Allama](/quickstart/install)
+2. Configure your AI provider (Settings → AI Providers)
+3. Try the examples above
+4. Join [Discord](https://discord.gg/2mK6h9rp) to share what you build
+
+---
+
+*Next in this series: [Why We Made Allama Open Source](/blog/why-open-source)*

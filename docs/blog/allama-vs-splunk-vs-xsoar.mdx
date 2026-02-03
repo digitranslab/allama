@@ -1,0 +1,193 @@
+---
+title: "Allama vs. Splunk SOAR vs. Palo Alto XSOAR: An Honest Comparison"
+description: "A fair, honest comparison of the leading security automation platforms. Learn when to choose each option based on your needs and budget."
+date: "2026-02-03"
+author: "DigitransLab Team"
+---
+
+# Allama vs. Splunk SOAR vs. Palo Alto XSOAR: An Honest Comparison
+
+Choosing a Security Orchestration, Automation, and Response (SOAR) platform is one of the most consequential decisions a security team can make. The right choice accelerates your team; the wrong one creates expensive shelfware.
+
+This guide provides an honest, fair comparison of three leading options: **Allama**, **Splunk SOAR** (formerly Phantom), and **Palo Alto XSOAR** (formerly Demisto). We'll cover features, pricing, deployment models, and—most importantly—when each platform makes sense.
+
+*Disclosure: We built Allama, so we're obviously biased. We've tried to be fair, but you should evaluate all options yourself.*
+
+## Quick Comparison
+
+| Feature | Allama | Splunk SOAR | Palo Alto XSOAR |
+|---------|--------|-------------|-----------------|
+| **Pricing** | Free (open source) | $$$$ (enterprise) | $$$$ (enterprise) |
+| **Deployment** | Self-hosted | Cloud or on-prem | Cloud or on-prem |
+| **Source Code** | Open (AGPL-3.0) | Closed | Closed |
+| **AI/LLM Integration** | Native | Limited | Limited |
+| **Visual Workflow Builder** | Yes | Yes | Yes |
+| **Case Management** | Built-in | Built-in | Built-in |
+| **Integrations** | 80+ | 300+ | 700+ |
+| **Learning Curve** | Low | Medium | High |
+| **Vendor Lock-in** | None | High | High |
+
+## Detailed Comparison
+
+### Pricing
+
+**Allama**: Free and open source under AGPL-3.0. You can run it on your own infrastructure at no cost. Enterprise support and managed hosting are available for organisations that want them.
+
+**Splunk SOAR**: Enterprise pricing, typically starting at $50,000-100,000+ annually depending on data volume and users. Requires Splunk Enterprise or Splunk Cloud for full functionality.
+
+**Palo Alto XSOAR**: Enterprise pricing, often bundled with Cortex XDR. Standalone pricing starts around $75,000+ annually. Per-user licensing can increase costs significantly.
+
+**Verdict**: If budget is a constraint, Allama is the clear winner. For organisations with existing Splunk or Palo Alto investments, bundled pricing may make those options more attractive.
+
+### Deployment Options
+
+**Allama**: 
+- Docker Compose (development/small teams)
+- Kubernetes with Helm charts (production)
+- AWS ECS Fargate with Terraform (managed cloud)
+- Air-gapped deployments supported
+
+**Splunk SOAR**:
+- Splunk Cloud (SaaS)
+- On-premises virtual appliance
+- AWS/Azure marketplace
+
+**Palo Alto XSOAR**:
+- Cortex XSOAR Cloud (SaaS)
+- On-premises deployment
+- Marketplace images
+
+**Verdict**: All three offer flexible deployment. Allama provides the most control for self-hosted scenarios; Splunk and XSOAR offer more polished SaaS experiences.
+
+### AI and LLM Integration
+
+**Allama**: Native AI agent support with multiple providers (OpenAI, Anthropic, Azure OpenAI, Google, Ollama for self-hosted). Agents can execute multi-step investigations autonomously.
+
+**Splunk SOAR**: Limited AI capabilities. Some ML-based features for alert correlation. No native LLM integration.
+
+**Palo Alto XSOAR**: Cortex XSIAM adds AI capabilities, but it's a separate (expensive) product. Basic ML for playbook suggestions.
+
+**Verdict**: Allama leads significantly in AI/LLM integration. If AI-powered automation is important to you, Allama is the best choice today.
+
+### Integrations
+
+**Allama**: 80+ integrations covering major security tools. Growing rapidly with community contributions. Custom integrations via YAML templates or Python.
+
+**Splunk SOAR**: 300+ integrations. Mature ecosystem with most enterprise tools covered. Splunk App marketplace.
+
+**Palo Alto XSOAR**: 700+ integrations. Largest marketplace. Strong coverage of enterprise and niche tools.
+
+**Verdict**: XSOAR has the most integrations, followed by Splunk SOAR. Allama covers the essentials but may lack niche integrations. All three support custom integration development.
+
+### Workflow Builder
+
+**Allama**: Visual drag-and-drop builder with YAML export. Supports conditionals, loops, parallel execution, and child workflows. Real-time validation.
+
+**Splunk SOAR**: Visual Playbook Editor. Mature and feature-rich. Supports complex logic and custom Python blocks.
+
+**Palo Alto XSOAR**: Visual Playbook Editor with extensive features. Task-based approach. Supports sub-playbooks and complex branching.
+
+**Verdict**: All three have capable workflow builders. XSOAR and Splunk SOAR are more mature; Allama is simpler to learn.
+
+### Case Management
+
+**Allama**: Built-in case management with custom fields, tasks, attachments, and audit trails. Integrates directly with workflows.
+
+**Splunk SOAR**: Mission Control for case management. Integrates with Splunk Enterprise Security.
+
+**Palo Alto XSOAR**: War Room for collaborative investigation. Incident timeline and evidence management.
+
+**Verdict**: All three provide solid case management. XSOAR's War Room is particularly strong for collaborative investigations.
+
+### Learning Curve
+
+**Allama**: Designed for simplicity. Most users can build their first workflow in under an hour. Comprehensive documentation.
+
+**Splunk SOAR**: Moderate learning curve. Familiarity with Splunk helps. Professional services often recommended for initial deployment.
+
+**Palo Alto XSOAR**: Steeper learning curve. Powerful but complex. Certification programmes available.
+
+**Verdict**: Allama is easiest to learn. Splunk SOAR is moderate. XSOAR requires the most investment in training.
+
+## When to Choose Each Platform
+
+### Choose Allama When:
+
+- **Budget is limited** — You need enterprise-grade automation without enterprise pricing
+- **AI is a priority** — You want native LLM integration for intelligent automation
+- **Self-hosting is required** — You need full control over your data and infrastructure
+- **Transparency matters** — You want to inspect and audit the code protecting your organisation
+- **You're starting fresh** — No existing SOAR investment to migrate from
+- **Speed matters** — You want to deploy and see value in days, not months
+
+### Choose Splunk SOAR When:
+
+- **You're a Splunk shop** — Heavy investment in Splunk Enterprise or Cloud
+- **Integration depth matters** — You need specific integrations not yet in Allama
+- **Enterprise support is required** — You need 24/7 vendor support with SLAs
+- **Compliance requires it** — Specific compliance frameworks mandate vendor-supported tools
+
+### Choose Palo Alto XSOAR When:
+
+- **You're in the Palo Alto ecosystem** — Using Cortex XDR, Prisma, or other PA products
+- **Maximum integrations needed** — You need the broadest possible integration coverage
+- **Large SOC team** — You have 10+ analysts who need collaborative features
+- **Budget isn't a constraint** — You can afford enterprise pricing and professional services
+
+## Migration Considerations
+
+### Migrating to Allama
+
+If you're considering migrating from Splunk SOAR or XSOAR to Allama:
+
+**Pros**:
+- Eliminate licensing costs
+- Gain AI capabilities
+- Reduce vendor dependency
+
+**Cons**:
+- May need to rebuild some playbooks
+- Some integrations may not exist yet
+- Self-managed infrastructure
+
+**Recommendation**: Run Allama in parallel first. Migrate workflows gradually. Contribute missing integrations back to the community.
+
+### Migrating from Allama
+
+If you start with Allama and later need enterprise features:
+
+- Allama workflows export to YAML, making migration straightforward
+- No vendor lock-in means you're never trapped
+- Enterprise support options available if you want to stay
+
+## Our Honest Assessment
+
+We built Allama because we saw a gap in the market: powerful security automation was only available to organisations with large budgets. We believe that's wrong.
+
+**Allama is the best choice** for teams that:
+- Want modern, AI-native automation
+- Value transparency and control
+- Need to move fast without enterprise sales cycles
+
+**Allama may not be the best choice** for teams that:
+- Need 700+ integrations today
+- Require vendor-backed SLAs for compliance
+- Have existing investments in Splunk or Palo Alto ecosystems
+
+The best way to decide? **Try all three.** Allama is free to deploy, and both Splunk and Palo Alto offer trials. Build the same workflow in each and see which fits your team.
+
+## Get Started
+
+Ready to try Allama?
+
+```bash
+git clone https://github.com/digitranslab/allama.git
+cd allama
+./demo.sh
+```
+
+You'll have a running instance in under 5 minutes. No sales call required.
+
+---
+
+*Have questions about this comparison? [Join our Discord](https://discord.gg/2mK6h9rp) and ask. We're happy to discuss the trade-offs honestly.*
