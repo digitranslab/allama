@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   main:
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     steps:
       - name: Draft release
         uses: release-drafter/release-drafter@v6

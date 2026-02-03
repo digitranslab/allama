@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   frontend-quality-and-tests:
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -68,10 +68,4 @@ jobs:
       - name: Summary
         if: success()
         run: |
-          echo "✅ Frontend CI pipeline completed successfully!"
-          echo "📝 Steps completed:"
-          echo "  - Code linting and formatting (Biome)"
-          echo "  - TypeScript type checking"
-          echo "  - Jest test suite execution"
-          echo ""
-          echo "🎉 All frontend quality checks passed!"
+          echo "Frontend CI pipeline completed successfully!"
