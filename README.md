@@ -29,8 +29,7 @@
   <a href="#why-allama">Why Allama</a> •
   <a href="#features">Features</a> •
   <a href="#quick-start">Quick Start</a> •
-  <a href="#architecture">Architecture</a> •
-  <a href="https://docs.allama.com">Documentation</a>
+  <a href="#architecture">Architecture</a>
 </p>
 
 ---
@@ -156,45 +155,6 @@ flowchart LR
 
 ---
 
-## Documentation
-
-- [Installation Guide](https://docs.allama.com/quickstart/install)
-- [Quickstart Tutorial](https://docs.allama.com/quickstart/tutorial)
-- [Core Actions](https://docs.allama.com/quickstart/core-actions)
-- [Custom Integrations](https://docs.allama.com/tutorials/custom-integrations)
-- [API Reference](https://docs.allama.com/api-reference/overview)
-
----
-
-## Contributing
-
-```bash
-uv sync                          # Install Python dependencies
-uv run pytest tests/unit         # Run tests
-pnpm -C frontend install         # Install frontend dependencies
-pnpm -C frontend dev             # Run frontend dev server
-just lint                        # Run linting
-```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
----
-
 ## Community
 
 - [Discord](https://discord.gg/2mK6h9rp) — Real-time support and discussion
-- [GitHub Issues](https://github.com/digitranslab/allama/issues) — Bug reports and feature requests
-- [Documentation](https://docs.allama.com) — Guides and tutorials
-
----
-
-## License
-
-[GNU Affero General Public License v3.0](LICENSE)
-
----
-
-<p align="center">
-  <strong>Built by <a href="https://digitranslab.com">DigitransLab</a></strong><br/>
-  Open-source security automation for the AI era.
-</p>
