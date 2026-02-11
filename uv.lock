@@ -10,7 +10,6 @@ resolution-markers = [
 members = [
     "allama",
     "allama-admin",
-    "allama-ee",
     "allama-registry",
 ]
 overrides = [
@@ -243,6 +242,292 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ab/8e/9b04275f20168c63dd34fe27f201f2da8030839903c84ec6e1eff54173f0/alembic_utils-0.8.4.tar.gz", hash = "sha256:825fad8091e5d780a026931b19c44ca007884f76d29221eda146441747a3435a", size = 22013, upload-time = "2024-07-29T18:08:11.358Z" }
+
+[[package]]
+name = "allama"
+source = { editable = "." }
+dependencies = [
+    { name = "aiocache" },
+    { name = "aiohttp" },
+    { name = "alembic" },
+    { name = "alembic-postgresql-enum" },
+    { name = "alembic-utils" },
+    { name = "allama-admin" },
+    { name = "allama-registry" },
+    { name = "async-lru" },
+    { name = "asyncpg" },
+    { name = "authlib" },
+    { name = "azure-core" },
+    { name = "claude-agent-sdk" },
+    { name = "cloudpickle" },
+    { name = "cramjam" },
+    { name = "croniter" },
+    { name = "cryptography" },
+    { name = "dateparser" },
+    { name = "defusedxml" },
+    { name = "email-validator" },
+    { name = "fastapi", extra = ["standard"] },
+    { name = "fastapi-sso" },
+    { name = "fastapi-users", extra = ["oauth", "sqlalchemy"] },
+    { name = "fastmcp" },
+    { name = "fickling" },
+    { name = "filelock" },
+    { name = "google-auth" },
+    { name = "greenlet" },
+    { name = "hatchling" },
+    { name = "httpx" },
+    { name = "jsonpath-ng" },
+    { name = "lark" },
+    { name = "litellm", extra = ["proxy"] },
+    { name = "loguru" },
+    { name = "marshmallow" },
+    { name = "minio" },
+    { name = "orjson" },
+    { name = "paramiko" },
+    { name = "phonenumbers" },
+    { name = "pip" },
+    { name = "polyfile" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "pyarrow" },
+    { name = "pyasn1" },
+    { name = "pydantic" },
+    { name = "pydantic-ai-slim", extra = ["anthropic", "bedrock", "google", "mcp", "openai"] },
+    { name = "pydantic-extra-types" },
+    { name = "pygithub" },
+    { name = "pynacl" },
+    { name = "pysaml2" },
+    { name = "python-slugify" },
+    { name = "redis", extra = ["hiredis"] },
+    { name = "sentry-sdk" },
+    { name = "sqlalchemy" },
+    { name = "starlette" },
+    { name = "temporalio" },
+    { name = "tenacity" },
+    { name = "tomli" },
+    { name = "urllib3" },
+    { name = "uv" },
+    { name = "uvicorn" },
+    { name = "virtualenv" },
+]
+
+[package.dev-dependencies]
+admin = [
+    { name = "allama-admin" },
+]
+dev = [
+    { name = "basedpyright" },
+    { name = "pre-commit" },
+    { name = "psycopg" },
+    { name = "pytest" },
+    { name = "pytest-benchmark" },
+    { name = "pytest-mock" },
+    { name = "pytest-repeat" },
+    { name = "pytest-xdist" },
+    { name = "python-dotenv" },
+    { name = "respx" },
+    { name = "ruff" },
+    { name = "types-aioboto3", extra = ["s3", "sts"] },
+    { name = "types-boto3", extra = ["s3", "sts"] },
+]
+lint = [
+    { name = "basedpyright" },
+    { name = "types-aioboto3", extra = ["s3", "sts"] },
+    { name = "types-boto3", extra = ["s3", "sts"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiocache", specifier = "==0.12.3" },
+    { name = "aiohttp", specifier = "==3.13.3" },
+    { name = "alembic", specifier = "==1.13.2" },
+    { name = "alembic-postgresql-enum", specifier = "==1.7.0" },
+    { name = "alembic-utils", specifier = "==0.8.4" },
+    { name = "allama-admin", editable = "packages/allama-admin" },
+    { name = "allama-registry", editable = "packages/allama-registry" },
+    { name = "async-lru", specifier = "==2.0.4" },
+    { name = "asyncpg", specifier = "==0.29.0" },
+    { name = "authlib", specifier = "==1.6.6" },
+    { name = "azure-core", specifier = "==1.38.0" },
+    { name = "claude-agent-sdk", specifier = "==0.1.18" },
+    { name = "cloudpickle", specifier = "==3.1.1" },
+    { name = "cramjam", specifier = "==2.11.0" },
+    { name = "croniter", specifier = "==6.0.0" },
+    { name = "cryptography", specifier = "==44.0.1" },
+    { name = "dateparser", specifier = "==1.2.2" },
+    { name = "defusedxml", specifier = "==0.7.1" },
+    { name = "email-validator", specifier = "==2.2.0" },
+    { name = "fastapi", extras = ["standard"], specifier = "==0.120.3" },
+    { name = "fastapi-sso", specifier = "==0.16.0" },
+    { name = "fastapi-users", extras = ["oauth", "sqlalchemy"], specifier = "==15.0.2" },
+    { name = "fastmcp", specifier = "==2.14.1" },
+    { name = "fickling", specifier = "==0.1.7" },
+    { name = "filelock", specifier = "==3.20.3" },
+    { name = "google-auth", specifier = "==2.37.0" },
+    { name = "greenlet", specifier = "==3.0.3" },
+    { name = "hatchling", specifier = "==1.27.0" },
+    { name = "httpx", specifier = "==0.28.1" },
+    { name = "jsonpath-ng", specifier = "==1.7.0" },
+    { name = "lark", specifier = "==1.1.9" },
+    { name = "litellm", extras = ["proxy"], specifier = "==1.80.16" },
+    { name = "loguru", specifier = "==0.7.3" },
+    { name = "marshmallow", specifier = "==3.26.2" },
+    { name = "minio", specifier = "==7.2.18" },
+    { name = "orjson", specifier = "==3.11.5" },
+    { name = "paramiko", specifier = "==3.5.0" },
+    { name = "phonenumbers", specifier = "==8.13.55" },
+    { name = "pip", specifier = "==25.3" },
+    { name = "polyfile", specifier = "==0.5.5" },
+    { name = "psycopg", extras = ["binary"], specifier = "==3.1.19" },
+    { name = "pyarrow", specifier = "==16.1.0" },
+    { name = "pyasn1", specifier = "==0.6.2" },
+    { name = "pydantic", specifier = "==2.12.5" },
+    { name = "pydantic-ai-slim", extras = ["anthropic", "bedrock", "google", "mcp", "openai"], specifier = "==1.29.0" },
+    { name = "pydantic-extra-types", specifier = "==2.11.0" },
+    { name = "pygithub", specifier = "==2.8.1" },
+    { name = "pynacl", specifier = "==1.6.2" },
+    { name = "pysaml2", specifier = "==7.5.0" },
+    { name = "python-slugify", specifier = "==8.0.4" },
+    { name = "redis", extras = ["hiredis"], specifier = "==7.1.0" },
+    { name = "sentry-sdk", specifier = "==2.24.1" },
+    { name = "sqlalchemy", specifier = "==2.0.45" },
+    { name = "starlette", specifier = "==0.49.3" },
+    { name = "temporalio", specifier = "==1.19.0" },
+    { name = "tenacity", specifier = "==8.3.0" },
+    { name = "tomli", specifier = "==2.2.1" },
+    { name = "urllib3", specifier = "==2.6.3" },
+    { name = "uv", specifier = "==0.9.15" },
+    { name = "uvicorn", specifier = "==0.35.0" },
+    { name = "virtualenv", specifier = "==20.36.1" },
+]
+
+[package.metadata.requires-dev]
+admin = [{ name = "allama-admin", editable = "packages/allama-admin" }]
+dev = [
+    { name = "basedpyright", specifier = "==1.37.1" },
+    { name = "pre-commit", specifier = "==4.1.0" },
+    { name = "psycopg", specifier = "==3.1.19" },
+    { name = "pytest", specifier = "==8.3.2" },
+    { name = "pytest-benchmark", specifier = "==5.2.3" },
+    { name = "pytest-mock", specifier = "==3.14.0" },
+    { name = "pytest-repeat", specifier = "==0.9.3" },
+    { name = "pytest-xdist", specifier = "==3.8.0" },
+    { name = "python-dotenv", specifier = "==1.1.1" },
+    { name = "respx", specifier = "==0.22.0" },
+    { name = "ruff", specifier = "==0.13.0" },
+    { name = "types-aioboto3", extras = ["sts", "s3"], specifier = "==15.5.0" },
+    { name = "types-boto3", extras = ["sts", "s3"], specifier = "==1.42.25" },
+]
+lint = [
+    { name = "basedpyright", specifier = "==1.37.1" },
+    { name = "types-aioboto3", extras = ["sts", "s3"], specifier = "==15.5.0" },
+    { name = "types-boto3", extras = ["sts", "s3"], specifier = "==1.42.25" },
+]
+
+[[package]]
+name = "allama-admin"
+source = { editable = "packages/allama-admin" }
+dependencies = [
+    { name = "email-validator" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "rich" },
+    { name = "typer" },
+]
+
+[package.optional-dependencies]
+bootstrap = [
+    { name = "allama" },
+]
+dev = [
+    { name = "pytest" },
+    { name = "respx" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "allama", marker = "extra == 'bootstrap'", editable = "." },
+    { name = "email-validator", specifier = "==2.2.0" },
+    { name = "httpx", specifier = "==0.28.1" },
+    { name = "pydantic", specifier = "==2.12.5" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
+    { name = "respx", marker = "extra == 'dev'", specifier = ">=0.22.0" },
+    { name = "rich", specifier = "==13.9.4" },
+    { name = "typer", specifier = "==0.21.1" },
+]
+provides-extras = ["bootstrap", "dev"]
+
+[[package]]
+name = "allama-registry"
+source = { editable = "packages/allama-registry" }
+dependencies = [
+    { name = "aioboto3" },
+    { name = "ansible-core" },
+    { name = "ansible-runner" },
+    { name = "boto3" },
+    { name = "crowdstrike-falconpy" },
+    { name = "dnspython" },
+    { name = "docker" },
+    { name = "duckdb" },
+    { name = "google-auth" },
+    { name = "grpcio" },
+    { name = "grpcio-tools" },
+    { name = "hatchling" },
+    { name = "httpx" },
+    { name = "jsonpath-ng" },
+    { name = "ldap3" },
+    { name = "marshmallow" },
+    { name = "nh3" },
+    { name = "orjson" },
+    { name = "paramiko" },
+    { name = "pydantic" },
+    { name = "pymongo" },
+    { name = "pyyaml" },
+    { name = "redis", extra = ["hiredis"] },
+    { name = "slack-sdk" },
+    { name = "sqlalchemy" },
+    { name = "tavily-python" },
+    { name = "tenacity" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "types-aioboto3", extra = ["s3", "sts"] },
+    { name = "types-boto3", extra = ["s3", "sts"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aioboto3", specifier = ">=15.0.0" },
+    { name = "ansible-core", specifier = ">=2.18.0,<3.0.0" },
+    { name = "ansible-runner", specifier = "==2.4.0" },
+    { name = "boto3", specifier = ">=1.39.0,<2.0.0" },
+    { name = "crowdstrike-falconpy", specifier = "==1.5.3" },
+    { name = "dnspython", specifier = "==2.6.1" },
+    { name = "docker", specifier = "==7.1.0" },
+    { name = "duckdb", specifier = "==1.4.3" },
+    { name = "google-auth", specifier = "==2.37.0" },
+    { name = "grpcio", specifier = "==1.75.1" },
+    { name = "grpcio-tools", specifier = "==1.75.1" },
+    { name = "hatchling", specifier = "==1.27.0" },
+    { name = "httpx", specifier = ">=0.27.0" },
+    { name = "jsonpath-ng", specifier = ">=1.7.0,<1.8.0" },
+    { name = "ldap3", specifier = "==2.9.1" },
+    { name = "marshmallow", specifier = "==3.26.2" },
+    { name = "nh3", specifier = "==0.2.18" },
+    { name = "orjson", specifier = "==3.11.5" },
+    { name = "paramiko", specifier = "==3.5.0" },
+    { name = "pydantic", specifier = ">=2.11.7,<3.0.0" },
+    { name = "pymongo", specifier = "==4.8.0" },
+    { name = "pyyaml", specifier = "==6.0.3" },
+    { name = "redis", extras = ["hiredis"], specifier = "==7.1.0" },
+    { name = "slack-sdk", specifier = "==3.28.0" },
+    { name = "sqlalchemy", specifier = ">=2.0.0,<3.0.0" },
+    { name = "tavily-python", specifier = "==0.7.6" },
+    { name = "tenacity", specifier = "==8.3.0" },
+    { name = "types-aioboto3", extras = ["s3", "sts"], marker = "extra == 'dev'", specifier = ">=15.0.0" },
+    { name = "types-boto3", extras = ["s3", "sts"], marker = "extra == 'dev'", specifier = ">=1.39.0,<2.0.0" },
+]
+provides-extras = ["dev"]
 
 [[package]]
 name = "annotated-doc"
@@ -4710,296 +4995,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl", hash = "sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2", size = 78540, upload-time = "2024-11-24T20:12:19.698Z" },
 ]
-
-[[package]]
-name = "allama"
-source = { editable = "." }
-dependencies = [
-    { name = "aiocache" },
-    { name = "aiohttp" },
-    { name = "alembic" },
-    { name = "alembic-postgresql-enum" },
-    { name = "alembic-utils" },
-    { name = "async-lru" },
-    { name = "asyncpg" },
-    { name = "authlib" },
-    { name = "azure-core" },
-    { name = "claude-agent-sdk" },
-    { name = "cloudpickle" },
-    { name = "cramjam" },
-    { name = "croniter" },
-    { name = "cryptography" },
-    { name = "dateparser" },
-    { name = "defusedxml" },
-    { name = "email-validator" },
-    { name = "fastapi", extra = ["standard"] },
-    { name = "fastapi-sso" },
-    { name = "fastapi-users", extra = ["oauth", "sqlalchemy"] },
-    { name = "fastmcp" },
-    { name = "fickling" },
-    { name = "filelock" },
-    { name = "google-auth" },
-    { name = "greenlet" },
-    { name = "hatchling" },
-    { name = "httpx" },
-    { name = "jsonpath-ng" },
-    { name = "lark" },
-    { name = "litellm", extra = ["proxy"] },
-    { name = "loguru" },
-    { name = "marshmallow" },
-    { name = "minio" },
-    { name = "orjson" },
-    { name = "paramiko" },
-    { name = "phonenumbers" },
-    { name = "pip" },
-    { name = "polyfile" },
-    { name = "psycopg", extra = ["binary"] },
-    { name = "pyarrow" },
-    { name = "pyasn1" },
-    { name = "pydantic" },
-    { name = "pydantic-ai-slim", extra = ["anthropic", "bedrock", "google", "mcp", "openai"] },
-    { name = "pydantic-extra-types" },
-    { name = "pygithub" },
-    { name = "pynacl" },
-    { name = "pysaml2" },
-    { name = "python-slugify" },
-    { name = "redis", extra = ["hiredis"] },
-    { name = "sentry-sdk" },
-    { name = "sqlalchemy" },
-    { name = "starlette" },
-    { name = "temporalio" },
-    { name = "tenacity" },
-    { name = "tomli" },
-    { name = "allama-ee" },
-    { name = "allama-registry" },
-    { name = "urllib3" },
-    { name = "uv" },
-    { name = "uvicorn" },
-    { name = "virtualenv" },
-]
-
-[package.dev-dependencies]
-admin = [
-    { name = "allama-admin" },
-]
-dev = [
-    { name = "basedpyright" },
-    { name = "pre-commit" },
-    { name = "psycopg" },
-    { name = "pytest" },
-    { name = "pytest-benchmark" },
-    { name = "pytest-mock" },
-    { name = "pytest-repeat" },
-    { name = "pytest-xdist" },
-    { name = "python-dotenv" },
-    { name = "respx" },
-    { name = "ruff" },
-    { name = "types-aioboto3", extra = ["s3", "sts"] },
-    { name = "types-boto3", extra = ["s3", "sts"] },
-]
-lint = [
-    { name = "basedpyright" },
-    { name = "types-aioboto3", extra = ["s3", "sts"] },
-    { name = "types-boto3", extra = ["s3", "sts"] },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aiocache", specifier = "==0.12.3" },
-    { name = "aiohttp", specifier = "==3.13.3" },
-    { name = "alembic", specifier = "==1.13.2" },
-    { name = "alembic-postgresql-enum", specifier = "==1.7.0" },
-    { name = "alembic-utils", specifier = "==0.8.4" },
-    { name = "async-lru", specifier = "==2.0.4" },
-    { name = "asyncpg", specifier = "==0.29.0" },
-    { name = "authlib", specifier = "==1.6.6" },
-    { name = "azure-core", specifier = "==1.38.0" },
-    { name = "claude-agent-sdk", specifier = "==0.1.18" },
-    { name = "cloudpickle", specifier = "==3.1.1" },
-    { name = "cramjam", specifier = "==2.11.0" },
-    { name = "croniter", specifier = "==6.0.0" },
-    { name = "cryptography", specifier = "==44.0.1" },
-    { name = "dateparser", specifier = "==1.2.2" },
-    { name = "defusedxml", specifier = "==0.7.1" },
-    { name = "email-validator", specifier = "==2.2.0" },
-    { name = "fastapi", extras = ["standard"], specifier = "==0.120.3" },
-    { name = "fastapi-sso", specifier = "==0.16.0" },
-    { name = "fastapi-users", extras = ["oauth", "sqlalchemy"], specifier = "==15.0.2" },
-    { name = "fastmcp", specifier = "==2.14.1" },
-    { name = "fickling", specifier = "==0.1.7" },
-    { name = "filelock", specifier = "==3.20.3" },
-    { name = "google-auth", specifier = "==2.37.0" },
-    { name = "greenlet", specifier = "==3.0.3" },
-    { name = "hatchling", specifier = "==1.27.0" },
-    { name = "httpx", specifier = "==0.28.1" },
-    { name = "jsonpath-ng", specifier = "==1.7.0" },
-    { name = "lark", specifier = "==1.1.9" },
-    { name = "litellm", extras = ["proxy"], specifier = "==1.80.16" },
-    { name = "loguru", specifier = "==0.7.3" },
-    { name = "marshmallow", specifier = "==3.26.2" },
-    { name = "minio", specifier = "==7.2.18" },
-    { name = "orjson", specifier = "==3.11.5" },
-    { name = "paramiko", specifier = "==3.5.0" },
-    { name = "phonenumbers", specifier = "==8.13.55" },
-    { name = "pip", specifier = "==25.3" },
-    { name = "polyfile", specifier = "==0.5.5" },
-    { name = "psycopg", extras = ["binary"], specifier = "==3.1.19" },
-    { name = "pyarrow", specifier = "==16.1.0" },
-    { name = "pyasn1", specifier = "==0.6.2" },
-    { name = "pydantic", specifier = "==2.12.5" },
-    { name = "pydantic-ai-slim", extras = ["anthropic", "bedrock", "google", "mcp", "openai"], specifier = "==1.29.0" },
-    { name = "pydantic-extra-types", specifier = "==2.11.0" },
-    { name = "pygithub", specifier = "==2.8.1" },
-    { name = "pynacl", specifier = "==1.6.2" },
-    { name = "pysaml2", specifier = "==7.5.0" },
-    { name = "python-slugify", specifier = "==8.0.4" },
-    { name = "redis", extras = ["hiredis"], specifier = "==7.1.0" },
-    { name = "sentry-sdk", specifier = "==2.24.1" },
-    { name = "sqlalchemy", specifier = "==2.0.45" },
-    { name = "starlette", specifier = "==0.49.3" },
-    { name = "temporalio", specifier = "==1.19.0" },
-    { name = "tenacity", specifier = "==8.3.0" },
-    { name = "tomli", specifier = "==2.2.1" },
-    { name = "allama-ee", editable = "packages/allama-ee" },
-    { name = "allama-registry", editable = "packages/allama-registry" },
-    { name = "urllib3", specifier = "==2.6.3" },
-    { name = "uv", specifier = "==0.9.15" },
-    { name = "uvicorn", specifier = "==0.35.0" },
-    { name = "virtualenv", specifier = "==20.36.1" },
-]
-
-[package.metadata.requires-dev]
-admin = [{ name = "allama-admin", editable = "packages/allama-admin" }]
-dev = [
-    { name = "basedpyright", specifier = "==1.37.1" },
-    { name = "pre-commit", specifier = "==4.1.0" },
-    { name = "psycopg", specifier = "==3.1.19" },
-    { name = "pytest", specifier = "==8.3.2" },
-    { name = "pytest-benchmark", specifier = "==5.2.3" },
-    { name = "pytest-mock", specifier = "==3.14.0" },
-    { name = "pytest-repeat", specifier = "==0.9.3" },
-    { name = "pytest-xdist", specifier = "==3.8.0" },
-    { name = "python-dotenv", specifier = "==1.1.1" },
-    { name = "respx", specifier = "==0.22.0" },
-    { name = "ruff", specifier = "==0.13.0" },
-    { name = "types-aioboto3", extras = ["sts", "s3"], specifier = "==15.5.0" },
-    { name = "types-boto3", extras = ["sts", "s3"], specifier = "==1.42.25" },
-]
-lint = [
-    { name = "basedpyright", specifier = "==1.37.1" },
-    { name = "types-aioboto3", extras = ["sts", "s3"], specifier = "==15.5.0" },
-    { name = "types-boto3", extras = ["sts", "s3"], specifier = "==1.42.25" },
-]
-
-[[package]]
-name = "allama-admin"
-source = { editable = "packages/allama-admin" }
-dependencies = [
-    { name = "email-validator" },
-    { name = "httpx" },
-    { name = "pydantic" },
-    { name = "rich" },
-    { name = "typer" },
-]
-
-[package.optional-dependencies]
-bootstrap = [
-    { name = "allama" },
-]
-dev = [
-    { name = "pytest" },
-    { name = "respx" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "email-validator", specifier = "==2.2.0" },
-    { name = "httpx", specifier = "==0.28.1" },
-    { name = "pydantic", specifier = "==2.12.5" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
-    { name = "respx", marker = "extra == 'dev'", specifier = ">=0.22.0" },
-    { name = "rich", specifier = "==13.9.4" },
-    { name = "allama", marker = "extra == 'bootstrap'", editable = "." },
-    { name = "typer", specifier = "==0.21.1" },
-]
-provides-extras = ["bootstrap", "dev"]
-
-[[package]]
-name = "allama-ee"
-source = { editable = "packages/allama-ee" }
-
-[[package]]
-name = "allama-registry"
-source = { editable = "packages/allama-registry" }
-dependencies = [
-    { name = "aioboto3" },
-    { name = "ansible-core" },
-    { name = "ansible-runner" },
-    { name = "boto3" },
-    { name = "crowdstrike-falconpy" },
-    { name = "dnspython" },
-    { name = "docker" },
-    { name = "duckdb" },
-    { name = "google-auth" },
-    { name = "grpcio" },
-    { name = "grpcio-tools" },
-    { name = "hatchling" },
-    { name = "httpx" },
-    { name = "jsonpath-ng" },
-    { name = "ldap3" },
-    { name = "marshmallow" },
-    { name = "nh3" },
-    { name = "orjson" },
-    { name = "paramiko" },
-    { name = "pydantic" },
-    { name = "pymongo" },
-    { name = "pyyaml" },
-    { name = "redis", extra = ["hiredis"] },
-    { name = "slack-sdk" },
-    { name = "sqlalchemy" },
-    { name = "tavily-python" },
-    { name = "tenacity" },
-]
-
-[package.optional-dependencies]
-dev = [
-    { name = "types-aioboto3", extra = ["s3", "sts"] },
-    { name = "types-boto3", extra = ["s3", "sts"] },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aioboto3", specifier = ">=15.0.0" },
-    { name = "ansible-core", specifier = ">=2.18.0,<3.0.0" },
-    { name = "ansible-runner", specifier = "==2.4.0" },
-    { name = "boto3", specifier = ">=1.39.0,<2.0.0" },
-    { name = "crowdstrike-falconpy", specifier = "==1.5.3" },
-    { name = "dnspython", specifier = "==2.6.1" },
-    { name = "docker", specifier = "==7.1.0" },
-    { name = "duckdb", specifier = "==1.4.3" },
-    { name = "google-auth", specifier = "==2.37.0" },
-    { name = "grpcio", specifier = "==1.75.1" },
-    { name = "grpcio-tools", specifier = "==1.75.1" },
-    { name = "hatchling", specifier = "==1.27.0" },
-    { name = "httpx", specifier = ">=0.27.0" },
-    { name = "jsonpath-ng", specifier = ">=1.7.0,<1.8.0" },
-    { name = "ldap3", specifier = "==2.9.1" },
-    { name = "marshmallow", specifier = "==3.26.2" },
-    { name = "nh3", specifier = "==0.2.18" },
-    { name = "orjson", specifier = "==3.11.5" },
-    { name = "paramiko", specifier = "==3.5.0" },
-    { name = "pydantic", specifier = ">=2.11.7,<3.0.0" },
-    { name = "pymongo", specifier = "==4.8.0" },
-    { name = "pyyaml", specifier = "==6.0.3" },
-    { name = "redis", extras = ["hiredis"], specifier = "==7.1.0" },
-    { name = "slack-sdk", specifier = "==3.28.0" },
-    { name = "sqlalchemy", specifier = ">=2.0.0,<3.0.0" },
-    { name = "tavily-python", specifier = "==0.7.6" },
-    { name = "tenacity", specifier = "==8.3.0" },
-    { name = "types-aioboto3", extras = ["s3", "sts"], marker = "extra == 'dev'", specifier = ">=15.0.0" },
-    { name = "types-boto3", extras = ["s3", "sts"], marker = "extra == 'dev'", specifier = ">=1.39.0,<2.0.0" },
-]
-provides-extras = ["dev"]
 
 [[package]]
 name = "trove-classifiers"

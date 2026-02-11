@@ -76,7 +76,7 @@ dependencies = [
     "temporalio==1.19.0",
     "tenacity==8.3.0",
     "tomli==2.2.1",
-    "allama-ee",
+    "allama-admin",
     "allama-registry",
     "urllib3==2.6.3",
     "uv==0.9.15",
@@ -94,7 +94,6 @@ Repository = "https://github.com/digitranslab/allama"
 allama = { workspace = true }
 allama-admin = { workspace = true }
 allama-registry = { workspace = true }
-allama-ee = { workspace = true }
 
 [tool.uv.workspace]
 members = ["packages/*"]
