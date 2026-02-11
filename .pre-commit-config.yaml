@@ -1,0 +1,49 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+default_language_version:
+  python: python3.12
+default_install_hook_types: [pre-commit, commit-msg]
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args:
+          - --maxkb=3000
+      - id: check-toml
+      - id: check-yaml
+        args:
+          - --unsafe
+        exclude: ^deployments/helm/.*/templates/
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.7
+    hooks:
+      - id: ruff-check
+        args:
+          - --fix
+          - --show-fixes
+          - --verbose
+      - id: ruff-format
+        verbose: true
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.25.1
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.9.7
+    hooks:
+      # Keep uv.lock in sync with changes to pyproject.toml
+      - id: uv-lock
+      # Optionally export a requirements.txt reflecting uv.lock
+      - id: uv-export
+  - repo: local
+    hooks:
+      - id: gen-client
+        name: update frontend client
+        entry: bash -c "pnpm -C frontend generate-client-ci && pnpm -C frontend check"
+        language: system
+        files: ^(allama|packages)
+        require_serial: true
+        pass_filenames: false

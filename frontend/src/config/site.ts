@@ -1,0 +1,25 @@
+import { env } from "@/env.mjs"
+import type { SiteConfig } from "@/types"
+
+export const siteConfig: SiteConfig = {
+  name: "Allama",
+  author: "Allama",
+  description:
+    "The open workflow automation platform for security and IT engineers.",
+  keywords: ["Next.js", "React", "Tailwind CSS", "Radix UI", "shadcn/ui"],
+  url: {
+    base: env.NEXT_PUBLIC_APP_URL,
+    author: "Allama",
+  },
+  links: {
+    github: "https://github.com/digitranslab/allama",
+    discord: "https://discord.gg/2mK6h9rp",
+    docs: "https://docs.allama.com",
+    playbooks: "https://github.com/digitranslab/allama/tree/main/playbooks",
+  },
+  ogImage: `${env.NEXT_PUBLIC_APP_URL}/og.jpg`,
+}
+
+export const routeConfig = {
+  home: "/workspaces",
+}

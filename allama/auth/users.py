@@ -1,0 +1,651 @@
+import contextlib
+import hashlib
+import os
+import uuid
+from collections.abc import AsyncGenerator, Iterable, Sequence
+from datetime import UTC, datetime
+from typing import Annotated, cast
+
+from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi_users import (
+    BaseUserManager,
+    FastAPIUsers,
+    InvalidPasswordException,
+    UUIDIDMixin,
+    models,
+    schemas,
+)
+from fastapi_users.authentication import (
+    AuthenticationBackend,
+    CookieTransport,
+    Strategy,
+)
+from fastapi_users.authentication.strategy.db import (
+    AccessTokenDatabase,
+    DatabaseStrategy,
+)
+from fastapi_users.db import SQLAlchemyUserDatabase
+from fastapi_users.exceptions import (
+    FastAPIUsersException,
+    UserAlreadyExists,
+    UserNotExists,
+)
+from fastapi_users.openapi import OpenAPIResponseType
+from fastapi_users_db_sqlalchemy.access_token import SQLAlchemyAccessTokenDatabase
+from pydantic import EmailStr
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from allama import config
+from allama.api.common import bootstrap_role
+from allama.auth.schemas import UserCreate, UserRole, UserUpdate
+from allama.auth.types import AccessLevel, Role, system_role
+from allama.authz.enums import OrgRole, WorkspaceRole
+from allama.authz.service import MembershipService
+from allama.contexts import ctx_role
+from allama.db.engine import get_async_session, get_async_session_context_manager
+from allama.db.models import AccessToken, OAuthAccount, Organization, User
+from allama.logger import logger
+from allama.settings.service import get_setting
+from allama.workspaces.schemas import WorkspaceMembershipCreate
+from allama.workspaces.service import WorkspaceService
+
+
+class InvalidEmailException(FastAPIUsersException):
+    """Exception raised on registration with an invalid email."""
+
+    def __init__(self) -> None:
+        super().__init__("Please enter a valid email address.")
+
+
+class PermissionsException(FastAPIUsersException):
+    """Exception raised on permissions error."""
+
+
+class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
+    reset_password_token_secret = config.USER_AUTH_SECRET
+    verification_token_secret = config.USER_AUTH_SECRET
+
+    def __init__(self, user_db: SQLAlchemyUserDatabase[User, uuid.UUID]) -> None:
+        super().__init__(user_db)
+        self.logger = logger.bind(unit="UserManager")
+        self.role = bootstrap_role()
+
+    async def update(
+        self,
+        user_update: schemas.BaseUserUpdate,
+        user: User,
+        safe: bool = False,
+        request: Request | None = None,
+    ) -> User:
+        """Update a user with user privileges."""
+        # NOTE(security): Prevent unprivileged users from changing role or is_superuser fields
+        denylist = ("role", "is_superuser")
+        set_fields = user_update.model_fields_set
+
+        role = ctx_role.get()
+        is_unprivileged = role is not None and role.access_level != AccessLevel.ADMIN
+        if not role or (
+            # Not admin and trying to change role or is_superuser
+            is_unprivileged and any(field in set_fields for field in denylist)
+        ):
+            raise PermissionsException("Operation not permitted")
+
+        return await super().update(user_update, user, safe=True, request=request)
+
+    async def admin_update(
+        self,
+        user_update: schemas.BaseUserUpdate,
+        user: User,
+        request: Request | None = None,
+    ) -> User:
+        """Update a user with admin privileges. This is only used to bootstrap the first user."""
+        return await super().update(user_update, user, safe=False, request=request)
+
+    async def validate_password(
+        self, password: str, user: schemas.BaseUserCreate | User
+    ) -> None:
+        if len(password) < config.ALLAMA__AUTH_MIN_PASSWORD_LENGTH:
+            raise InvalidPasswordException(
+                f"Password must be at least {config.ALLAMA__AUTH_MIN_PASSWORD_LENGTH} characters long"
+            )
+
+    async def validate_email(self, email: str) -> None:
+        # Check if this is attempting to be the first user (superadmin)
+        async with get_async_session_context_manager() as session:
+            users = await list_users(session=session)
+            if len(users) == 0:  # This would be the first user
+                # Only allow registration if this is the designated superadmin email
+                if not config.ALLAMA__AUTH_SUPERADMIN_EMAIL:
+                    self.logger.error(
+                        "No superadmin email configured, but attempting first user registration"
+                    )
+                    raise InvalidEmailException()
+                if email != config.ALLAMA__AUTH_SUPERADMIN_EMAIL:
+                    self.logger.error(
+                        "First user registration attempted with non-superadmin email",
+                        attempted_email=email,
+                        expected_email=config.ALLAMA__AUTH_SUPERADMIN_EMAIL,
+                    )
+                    raise InvalidEmailException()
+                self.logger.info(
+                    "Allowing first user registration for superadmin email", email=email
+                )
+                return
+
+        # For non-first users, apply normal domain validation
+        allowed_domains = cast(
+            list[str] | None,
+            await get_setting("auth_allowed_email_domains", role=self.role),
+            # Allow overriding of empty list
+        ) or list(config.ALLAMA__AUTH_ALLOWED_DOMAINS)
+        self.logger.debug("Allowed domains", allowed_domains=allowed_domains)
+        validate_email(email=email, allowed_domains=allowed_domains)
+
+    async def oauth_callback(  # pyright: ignore[reportIncompatibleMethodOverride]
+        self,
+        oauth_name: str,
+        access_token: str,
+        account_id: str,
+        account_email: str,
+        expires_at: int | None = None,
+        refresh_token: str | None = None,
+        request: Request | None = None,
+        *,
+        associate_by_email: bool = False,
+        is_verified_by_default: bool = False,
+    ) -> User:
+        await self.validate_email(account_email)
+        return await super().oauth_callback(  # pyright: ignore[reportAttributeAccessIssue]
+            oauth_name,
+            access_token,
+            account_id,
+            account_email,
+            expires_at,
+            refresh_token,
+            request,
+            associate_by_email=associate_by_email,
+            is_verified_by_default=is_verified_by_default,
+        )
+
+    async def create(
+        self,
+        user_create: schemas.BaseUserCreate,
+        safe: bool = False,
+        request: Request | None = None,
+    ) -> User:
+        await self.validate_email(user_create.email)
+        try:
+            return await super().create(user_create, safe, request)
+        except UserAlreadyExists:
+            # NOTE(security): Bypass fastapi users exception handler
+            raise InvalidEmailException() from None
+
+    async def on_after_login(
+        self,
+        user: User,
+        request: Request | None = None,
+        response: Response | None = None,
+    ) -> None:
+        # Update last login info
+        try:
+            now = datetime.now(UTC)
+            await self.user_db.update(user, update_dict={"last_login_at": now})
+        except Exception as e:
+            self.logger.warning(
+                "Failed to update last login info",
+                user_id=user.id,
+                user=user.email,
+                error=e,
+            )
+
+    async def on_after_register(
+        self, user: User, request: Request | None = None
+    ) -> None:
+        self.logger.info(f"User {user.id} has registered.")
+
+        # Check if this user should be promoted to superuser
+        async with get_async_session_context_manager() as session:
+            users = await list_users(session=session)
+            superadmin_email = config.ALLAMA__AUTH_SUPERADMIN_EMAIL
+            is_first_user = (
+                len(users) == 1 and superadmin_email and user.email == superadmin_email
+            )
+
+            if is_first_user:
+                # This is the first user and matches the designated superadmin email
+                update_params = UserUpdate(is_superuser=True, role=UserRole.ADMIN)
+                # NOTE(security): Bypass safety to create superadmin
+                await self.admin_update(user_update=update_params, user=user)
+                self.logger.info("First user promoted to superadmin", email=user.email)
+
+            # Add user to the default organization
+            # First user becomes OWNER, subsequent users become MEMBER
+            await self._add_user_to_default_organization(
+                session=session,
+                user=user,
+                org_role=OrgRole.OWNER if is_first_user else OrgRole.MEMBER,
+            )
+
+            if len(users) > 1 and await get_setting(
+                "app_create_workspace_on_register", default=False
+            ):
+                # Check if we should auto-create a workspace for the user
+                self.logger.info("Creating workspace for new user", user=user.email)
+                try:
+                    # Determine workspace name
+                    if user.first_name:
+                        workspace_name = f"{user.first_name}'s Workspace"
+                    else:
+                        # Remove domain from email to use as workspace name
+                        email_username = user.email.split("@")[0]
+                        workspace_name = f"{email_username}'s Workspace"
+
+                    # Create workspace with the system role
+                    sys_role = system_role()
+                    ws_svc = WorkspaceService(session, role=sys_role)
+                    workspace = await ws_svc.create_workspace(
+                        name=workspace_name, users=[user]
+                    )
+                    # Add user to workspace as a workspace admin
+                    membership_svc = MembershipService(session, role=sys_role)
+                    await membership_svc.create_membership(
+                        workspace_id=workspace.id,
+                        params=WorkspaceMembershipCreate(
+                            user_id=user.id, role=WorkspaceRole.ADMIN
+                        ),
+                    )
+                    self.logger.info(
+                        "Created workspace for new user",
+                        workspace_id=workspace.id,
+                        workspace_name=workspace_name,
+                        user_id=user.id,
+                        user_email=user.email,
+                    )
+                except Exception as e:
+                    self.logger.error(
+                        "Failed to create workspace for new user",
+                        error=str(e),
+                        user_id=user.id,
+                        user_email=user.email,
+                    )
+
+    async def _add_user_to_default_organization(
+        self,
+        *,
+        session: AsyncSession,
+        user: User,
+        org_role: OrgRole,
+    ) -> None:
+        """Add a newly registered user to the default organization and workspace.
+
+        The default organization is the first organization in the system,
+        which is created during app startup via `setup_default_organization`.
+        The default workspace is the first workspace in that organization,
+        created via `setup_workspace_defaults`.
+
+        The auth system determines organization membership via workspace memberships,
+        so users must have a workspace membership to access authenticated endpoints.
+
+        Args:
+            session: Database session.
+            user: The newly registered user.
+            org_role: The role to assign (OWNER for first user, MEMBER for others).
+        """
+        # Import here to avoid circular import with organization.service
+        from allama.db.models import Membership, Workspace
+        from allama.organization.service import OrgService
+
+        try:
+            # Get the default (first) organization, ordered by created_at for determinism
+            result = await session.execute(
+                select(Organization).order_by(Organization.created_at).limit(1)
+            )
+            org = result.scalar_one_or_none()
+
+            if org is None:
+                self.logger.warning(
+                    "No organization found, skipping org membership creation",
+                    user_id=str(user.id),
+                    user_email=user.email,
+                )
+                return
+
+            # Create a role with organization context for the OrgService
+            service_role = Role(
+                type="service",
+                service_id="allama-api",
+                access_level=AccessLevel.ADMIN,
+                organization_id=org.id,
+            )
+
+            # Add user to organization membership table
+            org_service = OrgService(session, role=service_role)
+            await org_service.add_member(
+                user_id=user.id,
+                organization_id=org.id,
+                role=org_role,
+            )
+            self.logger.info(
+                "Added user to default organization",
+                user_id=str(user.id),
+                user_email=user.email,
+                organization_id=str(org.id),
+                org_role=org_role.value,
+            )
+
+            # Also add user to the default workspace in the organization
+            # The auth system checks workspace memberships to determine org context
+            ws_result = await session.execute(
+                select(Workspace)
+                .where(Workspace.organization_id == org.id)
+                .order_by(Workspace.created_at)
+                .limit(1)
+            )
+            workspace = ws_result.scalar_one_or_none()
+
+            if workspace is None:
+                self.logger.warning(
+                    "No workspace found in organization, skipping workspace membership",
+                    user_id=str(user.id),
+                    user_email=user.email,
+                    organization_id=str(org.id),
+                )
+                return
+
+            # Add user to workspace with appropriate role
+            workspace_role = (
+                WorkspaceRole.ADMIN
+                if org_role == OrgRole.OWNER
+                else WorkspaceRole.EDITOR
+            )
+            membership = Membership(
+                user_id=user.id,
+                workspace_id=workspace.id,
+                role=workspace_role,
+            )
+            session.add(membership)
+            await session.commit()
+            await session.refresh(membership)
+
+            self.logger.info(
+                "Added user to default workspace",
+                user_id=str(user.id),
+                user_email=user.email,
+                workspace_id=str(workspace.id),
+                workspace_role=workspace_role.value,
+            )
+        except IntegrityError as e:
+            # User may already be a member (e.g., race condition or retry)
+            self.logger.warning(
+                "User may already be a member of default organization/workspace",
+                error=str(e),
+                user_id=str(user.id),
+                user_email=user.email,
+            )
+            await session.rollback()
+
+    async def on_after_forgot_password(
+        self, user: User, token: str, request: Request | None = None
+    ) -> None:
+        self.logger.info(
+            f"User {user.id} has forgot their password. Reset token: {token}"
+        )
+
+    async def on_after_request_verify(
+        self, user: User, token: str, request: Request | None = None
+    ) -> None:
+        self.logger.info(
+            f"Verification requested for user {user.id}. Verification token: {token}"
+        )
+
+    async def saml_callback(
+        self,
+        *,
+        email: str,
+        associate_by_email: bool = True,
+        is_verified_by_default: bool = True,
+    ) -> User:
+        """
+        Handle the callback after a successful SAML authentication.
+
+        :param email: Email of the user from SAML response.
+        :param associate_by_email: If True, associate existing user with the same email. Defaults to True.
+        :param is_verified_by_default: If True, set is_verified flag for new users. Defaults to True.
+        :return: A user.
+        """
+        await self.validate_email(email)
+        try:
+            user = await self.get_by_email(email)
+            if not associate_by_email:
+                raise UserAlreadyExists()
+        except UserNotExists:
+            # Create account
+            password = self.password_helper.generate()
+            user_dict = {
+                "email": email,
+                "hashed_password": self.password_helper.hash(password),
+                "is_verified": is_verified_by_default,
+            }
+            user = await self.user_db.create(user_dict)
+            await self.on_after_register(user)
+
+        self.logger.info(f"User {user.id} authenticated via SAML.")
+        return user
+
+
+async def get_user_db(session: AsyncSession = Depends(get_async_session)):
+    yield SQLAlchemyUserDatabase(session, User, OAuthAccount)
+
+
+async def get_access_token_db(
+    session: AsyncSession = Depends(get_async_session),
+) -> AsyncGenerator[SQLAlchemyAccessTokenDatabase[AccessToken], None]:
+    yield SQLAlchemyAccessTokenDatabase(session, AccessToken)
+
+
+def get_user_db_context(
+    session: AsyncSession,
+) -> contextlib.AbstractAsyncContextManager[SQLAlchemyUserDatabase[User, uuid.UUID]]:
+    return contextlib.asynccontextmanager(get_user_db)(session=session)
+
+
+async def get_user_manager(
+    user_db: SQLAlchemyUserDatabase[User, uuid.UUID] = Depends(get_user_db),
+) -> AsyncGenerator[UserManager, None]:
+    yield UserManager(user_db)
+
+
+def get_user_manager_context(
+    user_db: SQLAlchemyUserDatabase[User, uuid.UUID],
+) -> contextlib.AbstractAsyncContextManager[UserManager]:
+    return contextlib.asynccontextmanager(get_user_manager)(user_db=user_db)
+
+
+def _get_cookie_name() -> str:
+    """Get the cookie name, respecting environment variable override or generating a stable one.
+
+    Returns:
+        Cookie name from environment variable if set, a stable generated name in development,
+        or None to use the default cookie name.
+    """
+    # Allow explicit override via environment variable (for backward compatibility)
+    if env_cookie_name := (
+        os.environ.get("ALLAMA__DEV_COOKIE_NAME")
+        or os.environ.get("ALLAMA__COOKIE_NAME")
+    ):
+        return env_cookie_name
+
+    # Only generate stable cookie name in development mode
+    if config.ALLAMA__APP_ENV == "development":
+        """Generate a stable cookie name unique to this allama instance.
+
+        Uses the Docker Compose project name (COMPOSE_PROJECT_NAME) if available,
+        which provides a stable, instance-specific identifier. Falls back to a hash
+        of stable configuration values if not in a Docker Compose environment.
+
+        This ensures each instance gets a unique cookie name that remains consistent
+        across restarts, preventing cookie conflicts when running multiple instances.
+
+        Returns:
+            A stable cookie name like 'allama_auth_<project_name>' or 'allama_auth_<hash>'.
+        """
+        # Prefer Docker Compose project name (most stable and human-readable)
+        from slugify import slugify
+
+        if compose_project_name := os.environ.get("COMPOSE_PROJECT_NAME"):
+            return f"allama_auth_{slugify(compose_project_name)}"
+
+        # Fallback: use hash of stable instance configuration
+        # Use public app URL as primary source of uniqueness (unique per instance)
+        # The DB URI and internal API URL are typically the same across Docker instances
+        # since they use internal Docker network addresses
+        stable_value = config.ALLAMA__PUBLIC_APP_URL
+
+        # Generate a short hash (first 8 characters of SHA256)
+        hash_obj = hashlib.sha256(stable_value.encode())
+        hash_hex = hash_obj.hexdigest()[:8]
+
+        return f"allama_auth_{hash_hex}"
+
+    # In production/staging, use default cookie name (None)
+    return "fastapiusersauth"
+
+
+cookie_transport = CookieTransport(
+    cookie_name=_get_cookie_name(),
+    cookie_max_age=config.SESSION_EXPIRE_TIME_SECONDS,
+    cookie_secure=config.ALLAMA__API_URL.startswith("https"),
+)
+
+
+def get_database_strategy(
+    access_token_db: AccessTokenDatabase[AccessToken] = Depends(get_access_token_db),
+) -> DatabaseStrategy[User, uuid.UUID, AccessToken]:
+    strategy = DatabaseStrategy(
+        access_token_db,
+        lifetime_seconds=config.SESSION_EXPIRE_TIME_SECONDS,
+    )
+
+    return strategy
+
+
+auth_backend: AuthenticationBackend[User, uuid.UUID] = AuthenticationBackend(
+    name="database",
+    transport=cookie_transport,
+    get_strategy=get_database_strategy,
+)
+
+AuthBackendStrategyDep = Annotated[
+    Strategy[models.UP, models.ID], Depends(auth_backend.get_strategy)
+]
+UserManagerDep = Annotated[UserManager, Depends(get_user_manager)]
+
+
+class FastAPIUserWithLogoutRouter(FastAPIUsers[models.UP, models.ID]):
+    def get_logout_router(
+        self,
+        backend: AuthenticationBackend[models.UP, models.ID],
+        requires_verification: bool = config.ALLAMA__AUTH_REQUIRE_EMAIL_VERIFICATION,
+    ) -> APIRouter:
+        """
+        Provide a router for logout only for OAuth/OIDC Flows.
+        This way the login router does not need to be included
+        """
+        router = APIRouter()
+        get_current_user_token = self.authenticator.current_user_token(
+            active=True, verified=requires_verification
+        )
+        logout_responses: OpenAPIResponseType = {
+            **{
+                status.HTTP_401_UNAUTHORIZED: {
+                    "description": "Missing token or inactive user."
+                }
+            },
+            **backend.transport.get_openapi_logout_responses_success(),
+        }
+
+        @router.post(
+            "/logout", name=f"auth:{backend.name}.logout", responses=logout_responses
+        )
+        async def logout(  # pyright: ignore[reportUnusedFunction] - registered as FastAPI route handler
+            user_token: tuple[models.UP, str] = Depends(get_current_user_token),
+            strategy: Strategy[models.UP, models.ID] = Depends(backend.get_strategy),
+        ) -> Response:
+            user, token = user_token
+            return await backend.logout(strategy, user, token)
+
+        return router
+
+
+fastapi_users = FastAPIUserWithLogoutRouter[User, uuid.UUID](
+    get_user_manager, [auth_backend]
+)
+
+current_active_user = fastapi_users.current_user(active=True)
+optional_current_active_user = fastapi_users.current_user(active=True, optional=True)
+
+
+def is_unprivileged(user: User) -> bool:
+    """Check if a user is not privileged (i.e. not an admin or superuser)."""
+    return user.role != UserRole.ADMIN and not user.is_superuser
+
+
+async def get_or_create_user(params: UserCreate, exist_ok: bool = True) -> User:
+    async with get_async_session_context_manager() as session:
+        async with get_user_db_context(session) as user_db:
+            async with get_user_manager_context(user_db) as user_manager:
+                try:
+                    user = await user_manager.create(params)
+                    logger.info(f"User created {user}")
+                    return user
+                except UserAlreadyExists:
+                    # Compares by email
+                    logger.warning(f"User {params.email} already exists")
+                    if not exist_ok:
+                        raise
+                    return await user_manager.get_by_email(params.email)
+
+
+async def list_users(*, session: AsyncSession) -> Sequence[User]:
+    statement = select(User)
+    result = await session.execute(statement)
+    return result.scalars().all()
+
+
+async def search_users(
+    *,
+    session: AsyncSession,
+    user_ids: Iterable[uuid.UUID] | None = None,
+) -> Sequence[User]:
+    statement = select(User)
+    if user_ids:
+        statement = statement.where(User.id.in_(user_ids))  # pyright: ignore[reportAttributeAccessIssue]
+    result = await session.execute(statement)
+    return result.scalars().all()
+
+
+def validate_email(
+    email: EmailStr, *, allowed_domains: list[str] | None = None
+) -> None:
+    # Safety: This is already a validated email, so we can split on the first @
+    _, domain = email.split("@", 1)
+    if allowed_domains and domain not in allowed_domains:
+        raise InvalidEmailException()
+    logger.info("Validated email with domain", domain=domain)
+
+
+async def lookup_user_by_email(*, session: AsyncSession, email: str) -> User | None:
+    """Look up a user by their email address.
+
+    Args:
+        session: The database session.
+        email: The email address to search for.
+
+    Returns:
+        User | None: The user object if found, None otherwise.
+    """
+    statement = select(User).where(User.email == email)  # pyright: ignore[reportArgumentType]
+    result = await session.execute(statement)
+    return result.scalars().first()

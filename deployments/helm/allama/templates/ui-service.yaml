@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "allama.fullname" . }}-ui
+  labels:
+    {{- include "allama.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ui
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "allama.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ui

@@ -1,0 +1,231 @@
+[build-system]
+requires = ["hatchling >= 1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "allama"
+description = "AI automation platform for enterprise."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "AGPL-3.0"
+authors = [{ name = "Allama", email = "founders@allama.com" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Topic :: Security",
+    "Topic :: System :: Systems Administration",
+]
+dependencies = [
+    "aiocache==0.12.3",
+    "aiohttp==3.13.3",
+    "alembic_utils==0.8.4",
+    "alembic-postgresql-enum==1.7.0",
+    "alembic==1.13.2",
+    "async-lru==2.0.4",
+    "asyncpg==0.29.0",
+    "authlib==1.6.6",
+    "azure-core==1.38.0",
+    "claude-agent-sdk==0.1.18",
+    "cloudpickle==3.1.1",
+    "cramjam==2.11.0",
+    "croniter==6.0.0",
+    "cryptography==44.0.1",
+    "dateparser==1.2.2",
+    "defusedxml==0.7.1",
+    "email-validator==2.2.0",
+    "fastapi-users[sqlalchemy,oauth]==15.0.2",
+    "fastapi[standard]==0.120.3",
+    "fastmcp==2.14.1",
+    "fickling==0.1.7",
+    "filelock==3.20.3",
+    "fastapi-sso==0.16.0",
+    "google-auth==2.37.0",
+    "greenlet==3.0.3",
+    "hatchling==1.27.0",
+    "httpx==0.28.1",
+    "jsonpath_ng==1.7.0",
+    "lark==1.1.9",
+    "litellm[proxy]==1.80.16",
+    "loguru==0.7.3",
+    "marshmallow==3.26.2",
+    "minio==7.2.18",
+    "orjson==3.11.5",
+    "paramiko==3.5.0",
+    "phonenumbers==8.13.55",
+    "pip==25.3",
+    "polyfile==0.5.5",
+    "psycopg[binary]==3.1.19",
+    "pyarrow==16.1.0",
+    "pydantic-ai-slim[anthropic,bedrock,google,mcp,openai]==1.29.0",
+    "pydantic-extra-types==2.11.0",
+    "pydantic==2.12.5",
+    "pygithub==2.8.1",
+    "pynacl==1.6.2",
+    "pyasn1==0.6.2",
+    "pysaml2==7.5.0",
+    "python-slugify==8.0.4",
+    "redis[hiredis]==7.1.0",
+    "sentry-sdk==2.24.1",
+    "sqlalchemy==2.0.45",
+    "starlette==0.49.3",
+    "temporalio==1.19.0",
+    "tenacity==8.3.0",
+    "tomli==2.2.1",
+    "allama-ee",
+    "allama-registry",
+    "urllib3==2.6.3",
+    "uv==0.9.15",
+    "uvicorn==0.35.0",
+    "virtualenv==20.36.1",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://allama.com"
+Documentation = "https://docs.allama.com/"
+Repository = "https://github.com/digitranslab/allama"
+
+[tool.uv.sources]
+allama = { workspace = true }
+allama-admin = { workspace = true }
+allama-registry = { workspace = true }
+allama-ee = { workspace = true }
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv]
+# litellm[proxy] has overly restrictive dependency pins that conflict with other packages:
+# - uvicorn>=0.31.1,<0.32.0 conflicts with fastmcp which requires uvicorn>=0.35
+# - boto3==1.36.0 conflicts with allama-registry which requires boto3>=1.39.0
+# - python-multipart>=0.0.18,<0.0.19 conflicts with fastapi-users which requires 0.0.21
+# - rich==13.7.1 conflicts with fastmcp which requires rich>=13.9.4
+# - grpcio>=1.62.3,<1.68.0 conflicts with allama-registry which requires grpcio==1.75.1
+# - grpcio-tools pinned in allama-registry
+override-dependencies = [
+    "uvicorn==0.35.0",
+    "boto3==1.40.61",
+    "python-multipart==0.0.22",
+    "rich==13.9.4",
+    "grpcio==1.75.1",
+    "grpcio-tools==1.75.1",
+]
+
+[dependency-groups]
+admin = ["allama-admin"]
+lint = [
+    "basedpyright==1.37.1",
+    "types-aioboto3[sts,s3]==15.5.0",
+    "types-boto3[sts,s3]==1.42.25",
+]
+dev = [
+    "pre-commit==4.1.0",
+    "psycopg==3.1.19",
+    "pytest-benchmark==5.2.3",
+    "pytest-mock==3.14.0",
+    "pytest-repeat==0.9.3",
+    "pytest-xdist==3.8.0",
+    "pytest==8.3.2",
+    "python-dotenv==1.1.1",
+    "respx==0.22.0",
+    "ruff==0.13.0",
+    {include-group = "lint"},
+]
+
+[tool.hatch.version]
+path = "allama/__init__.py"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.ruff]
+line-length = 88
+fix = true
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501", # line too long, handled by ruff
+    "B008", # do not perform function calls in argument defaults
+    "W191", # indentation contains tabs
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/temporal/*" = ["E402"]  # pytestmark before imports is intentional
+
+[tool.ruff.lint.pyupgrade]
+# Preserve types, even if a file imports `from __future__ import annotations`.
+keep-runtime-typing = true
+
+[tool.pytest.ini_options]
+addopts = [
+    "--strict-config",
+    "--strict-markers",
+    "-vvrP",
+    "--benchmark-disable",
+]
+xfail_strict = true
+log_level = "ERROR"
+log_cli = true
+log_cli_level = "ERROR"
+filterwarnings = ["ignore:Pydantic serializer warnings:UserWarning"]
+markers = [
+    "anyio: marks tests as requiring the anyio pytest plugin",
+    "webtest: marks tests that require the web",
+    "slow: marks tests as slow",
+    "dbtest: marks tests that make database calls",
+    "disable_fixture: marks tests that disable fixtures",
+    "integration: marks tests that perform live network calls and container operations",
+    "llm: marks tests that perform LLM calls",
+    "ollama: mark tests that require Ollama",
+    "temporal: marks tests that require Temporal server",
+    "regression: marks regression tests",
+]
+
+[tool.basedpyright]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+include = ["allama", "packages", "alembic", "tests"]
+exclude = ["scripts/", "**/__pycache__", "**/node_modules"]
+# Core type checking - keep enabled for catching real bugs
+reportMissingTypeStubs = false    # Don't require stubs for all dependencies
+reportUnusedImport = "warning"
+reportUnusedVariable = "warning"
+reportUnusedFunction = "warning"
+reportDuplicateImport = "warning"
+# Disable noisy warnings that don't indicate real bugs
+reportAny = false
+reportExplicitAny = false
+reportUnknownArgumentType = false
+reportUnknownLambdaType = false
+reportUnknownMemberType = false
+reportUnknownParameterType = false
+reportUnknownVariableType = false
+reportMissingParameterType = false
+reportUnannotatedClassAttribute = false
+reportUnusedCallResult = false
+reportUnusedParameter = false
+reportImplicitStringConcatenation = false
+reportCallInDefaultInitializer = false
+reportImplicitOverride = false
+reportPrivateUsage = false
+reportPrivateLocalImportUsage = false
+reportImportCycles = false
+reportUnnecessaryComparison = false
+reportUnnecessaryIsInstance = false
+reportUnnecessaryCast = false
+reportDeprecated = false
+reportMissingTypeArgument = false

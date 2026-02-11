@@ -1,0 +1,24 @@
+title: Filter data
+description: Test to filter data
+entrypoint:
+  ref: filter_empty
+
+actions:
+  - ref: filter_empty
+    action: core.transform.filter
+    args:
+      # List of objects to filter
+      items:
+        - signal: a
+          data: [1, 2, 3]
+        - signal: b
+          data: [4, 5, 6]
+        - signal: c
+          data: []
+        - signal: d
+          data: [7, 8, 9]
+        - signal: e
+          data: [10, 11, 12]
+        - signal: f
+          data: []
+      python_lambda: "lambda row: len(row['data']) > 0"

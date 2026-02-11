@@ -1,0 +1,69 @@
+title: Adder tree Workflow
+#    A
+#    /\
+#   B  c
+#  /|  |\
+# D E  F G
+description: Tests correctness, templates + type casting, context passing.
+config:
+  scheduler: dynamic
+entrypoint:
+  ref: a
+
+triggers:
+  - type: webhook
+    ref: my_webhook
+    id: wh-XXXXXX
+    entrypoint: a # This can be any
+    args:
+      url: http://api:8000/test/items/1
+      method: GET
+
+actions:
+  - ref: a
+    action: core.transform.reshape # NOTE: THIS IS DEFINED IN A PYTEST FIXTURE
+    args:
+      value: "1"
+
+  - ref: b
+    action: core.transform.reshape
+    args:
+      value: ${{ int(ACTIONS.a.result) + 1 }}
+    depends_on:
+      - a
+
+  - ref: c
+    action: core.transform.reshape
+    args:
+      value: ${{ int(ACTIONS.a.result) + 3 }}
+    depends_on:
+      - a
+
+  - ref: d
+    action: core.transform.reshape
+    args:
+      value: ${{ int(ACTIONS.b.result) + int(ACTIONS.b.result) }}
+    depends_on:
+      - b
+
+  - ref: e
+    action: core.transform.reshape
+    args:
+      value: ${{ int(ACTIONS.b.result) + 8 }}
+    depends_on:
+      - b
+
+  - ref: f
+    action: core.transform.reshape
+    args:
+      # Grab the result from 2 parents above
+      value: ${{ int(ACTIONS.c.result) + int(ACTIONS.c.result) }}
+    depends_on:
+      - c
+
+  - ref: g
+    action: core.transform.reshape
+    args:
+      value: ${{ int(ACTIONS.c.result) + 10 }}
+    depends_on:
+      - c

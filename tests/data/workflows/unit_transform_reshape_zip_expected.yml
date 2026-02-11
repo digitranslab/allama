@@ -1,0 +1,8 @@
+ACTIONS:
+  a:
+    result:
+      - I received 1one from you
+      - I received 2two from you
+      - I received 3three from you
+    result_typename: "list"
+TRIGGER:

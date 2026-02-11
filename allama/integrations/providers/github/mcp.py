@@ -1,0 +1,48 @@
+"""GitHub Copilot MCP OAuth integration using Model Context Protocol."""
+
+from typing import ClassVar
+
+from allama.integrations.providers.base import MCPAuthProvider
+from allama.integrations.schemas import ProviderMetadata, ProviderScopes
+
+
+class GitHubMCPProvider(MCPAuthProvider):
+    """GitHub Copilot OAuth provider for Model Context Protocol integration.
+
+    This provider enables integration with GitHub Copilot's MCP server for:
+    - Code assistance and suggestions
+    - Repository context understanding
+    - Development workflow automation
+
+    Uses fallback OAuth endpoints since GitHub doesn't support discovery.
+    """
+
+    id: ClassVar[str] = "github_mcp"
+    mcp_server_uri: ClassVar[str] = "https://api.githubcopilot.com/mcp"
+
+    # Fallback OAuth endpoints (GitHub doesn't support discovery)
+    default_authorization_endpoint: ClassVar[str | None] = (
+        "https://github.com/login/oauth/authorize"
+    )
+    default_token_endpoint: ClassVar[str | None] = (
+        "https://github.com/login/oauth/access_token"
+    )
+
+    # No default scopes - authorization server determines based on user permissions
+    scopes: ClassVar[ProviderScopes] = ProviderScopes(default=[])
+    # Provider metadata
+    metadata: ClassVar[ProviderMetadata] = ProviderMetadata(
+        id="github_mcp",
+        name="GitHub Copilot MCP",
+        description="GitHub Copilot MCP provider for repo and code access",
+        enabled=True,
+        requires_config=True,
+        setup_instructions=(
+            "Connect to GitHub Copilot MCP to enable AI-powered code assistance and repository context. "
+            "Register an OAuth application with GitHub Copilot MCP and provide the client ID and secret."
+            "Permissions are automatically determined based on your GitHub account and organization settings."
+        ),
+        api_docs_url="https://docs.github.com/en/copilot",
+        setup_guide_url="https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/set-up-the-github-mcp-server",
+        troubleshooting_url="https://docs.github.com/en/apps/oauth-apps/maintaining-oauth-apps/troubleshooting-authorization-request-errors",
+    )

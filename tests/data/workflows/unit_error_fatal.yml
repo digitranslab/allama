@@ -1,0 +1,29 @@
+title: Fatal error Workflow
+#    A
+#    |
+#    B
+description: Use this to test error handling
+config:
+  scheduler: dynamic
+entrypoint:
+  ref: a
+
+triggers:
+  - type: webhook
+    ref: my_webhook
+    entrypoint: a # This can be any
+
+actions:
+  - ref: a
+    action: core.transform.reshape
+    args:
+      value:
+        valid: 1
+
+  - ref: b
+    action: core.transform.reshape
+    depends_on:
+      - a
+    args:
+      # This should fail
+      value: ${{ int(ACTIONS.a.result.invalid) + int(2) }}
