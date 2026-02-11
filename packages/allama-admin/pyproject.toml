@@ -47,3 +47,6 @@ Repository = "https://github.com/digitranslab/allama"
 
 [tool.hatch.version]
 path = "allama_admin/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["allama_admin", "allama_ee"]
